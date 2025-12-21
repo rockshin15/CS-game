@@ -1,0 +1,17 @@
+[
+  { "name": "Solaris", "shortName": "SOL", "type": "Abstract", "color": "#f59e0b" },
+  { "name": "Viper Esports", "shortName": "VPR", "type": "Animal", "color": "#10b981" },
+  { "name": "Crimson Tide", "shortName": "CRT", "type": "Abstract", "color": "#dc2626" },
+  { "name": "North Star", "shortName": "NST", "type": "Location", "color": "#2563eb" },
+  { "name": "Ironclad", "shortName": "ICL", "type": "Object", "color": "#4b5563" },
+  { "name": "Apex Gaming", "shortName": "APX", "type": "Abstract", "color": "#7c3aed" },
+  { "name": "Ghost Legion", "shortName": "GL", "type": "Aggressive", "color": "#9ca3af" },
+  { "name": "Neon Dreams", "shortName": "NEO", "type": "Abstract", "color": "#db2777" },
+  { "name": "Thunderbirds", "shortName": "TB", "type": "Animal", "color": "#0ea5e9" },
+  { "name": "Obsidian", "shortName": "OBS", "type": "Object", "color": "#111827" },
+  { "name": "Golden Lions", "shortName": "LION", "type": "Animal", "color": "#d97706" },
+  { "name": "Velocity", "shortName": "VEL", "type": "Abstract", "color": "#06b6d4" },
+  { "name": "Sector 7", "shortName": "S7", "type": "SciFi", "color": "#84cc16" },
+  { "name": "Imperium", "shortName": "IMP", "type": "Legacy", "color": "#b91c1c" },
+  { "name": "Zenith", "shortName": "ZEN", "type": "Abstract", "color": "#6366f1" }
+]
