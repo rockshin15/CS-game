@@ -1,0 +1,4 @@
+[
+  { "id": "mirage", "name": "Mirage", "ctBias": 0.52 },
+  { "id": "inferno", "name": "Inferno", "ctBias": 0.48 }
+]
