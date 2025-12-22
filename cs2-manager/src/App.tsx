@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import { MainMenu } from './ui/screens/MainMenu';
 import { MatchTestScreen } from './ui/screens/MatchTestScreen';
-import { TeamTestScreen } from './ui/screens/TeamTestScreen'; // Se quiser acessar a criação de times
+import { TeamTestScreen } from './ui/screens/TeamTestScreen'; 
+import CalendarScreen from './ui/screens/CalendarScreen'; // Novo Import
+import { GameProvider } from './ui/context/GameContext';  // Novo Import (Essencial)
 
-// Definindo as telas possíveis
-type Screen = 'MENU' | 'MATCH_TEST' | 'NEW_LEAGUE' | 'TEAM_TEST';
+// Definindo as telas possíveis (Adicionado CALENDAR)
+type Screen = 'MENU' | 'MATCH_TEST' | 'NEW_LEAGUE' | 'TEAM_TEST' | 'CALENDAR';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('MENU');
@@ -13,8 +15,8 @@ export default function App() {
   // Lógica para quando clicar em "Nova Liga"
   const handleStartNew = () => {
     console.log("Iniciando nova liga...");
-    // Por enquanto, vou redirecionar para sua tela de teste de partida
-    setCurrentScreen('MATCH_TEST');
+    // Redirecionando para o Calendário para testar o novo motor
+    setCurrentScreen('CALENDAR');
   };
 
   // Lógica para carregar um save
@@ -23,9 +25,10 @@ export default function App() {
     setCurrentScreen('MATCH_TEST');
   };
 
-  // Renderização condicional das telas
   return (
-    <>
+    // O Provider precisa envolver tudo para o estado do jogo persistir entre telas
+    <GameProvider>
+      
       {currentScreen === 'MENU' && (
         <MainMenu 
           onStartNew={handleStartNew} 
@@ -57,6 +60,30 @@ export default function App() {
           <TeamTestScreen />
         </div>
       )}
-    </>
+
+      {/* Nova Rota do Calendário */}
+      {currentScreen === 'CALENDAR' && (
+        <div style={{ height: '100vh', width: '100vw' }}>
+          <button 
+            onClick={() => setCurrentScreen('MENU')}
+            style={{ 
+              position: 'fixed', 
+              top: 10, 
+              right: 10, // Coloquei na direita para não tapar o header do calendário
+              zIndex: 1000,
+              padding: '8px 16px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              cursor: 'pointer'
+            }}
+          >
+            ⬅ Voltar ao Menu
+          </button>
+          <CalendarScreen />
+        </div>
+      )}
+
+    </GameProvider>
   );
 }

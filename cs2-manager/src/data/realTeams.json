@@ -288,4 +288,165 @@
       { "nickname": "HUASOPEEK", "country": "CL", "role": "Rifle", "age": 20, "stats": { "aim": 91, "reflexes": 93, "spray": 86, "sense": 80, "util": 75, "disc": 75 } }
     ]
   }
+  ,
+  {
+    "name": "Team Falcons",
+    "shortName": "FLCN",
+    "region": "Europe",
+    "tier": "S",
+    "colors": { "primary": "#008000", "secondary": "#000000" },
+    "strategy": "Superteam",
+    "playStyle": "Clutch Kings",
+    "roster": [
+      { "nickname": "s1mple", "country": "UA", "role": "AWPer", "age": 27, "stats": { "aim": 98, "reflexes": 97, "spray": 95, "sense": 98, "util": 85, "disc": 80 } },
+      { "nickname": "Magisk", "country": "DK", "role": "Lurker", "age": 27, "stats": { "aim": 90, "reflexes": 88, "spray": 92, "sense": 94, "util": 90, "disc": 92 } },
+      { "nickname": "NiKo", "country": "BA", "role": "Rifle", "age": 28, "stats": { "aim": 97, "reflexes": 94, "spray": 95, "sense": 90, "util": 80, "disc": 75 } },
+      { "nickname": "Snappi", "country": "DK", "role": "IGL", "age": 34, "stats": { "aim": 75, "reflexes": 70, "spray": 78, "sense": 96, "util": 95, "disc": 90 } },
+      { "nickname": "Maden", "country": "ME", "role": "Entry", "age": 25, "stats": { "aim": 88, "reflexes": 90, "spray": 85, "sense": 82, "util": 80, "disc": 75 } }
+    ]
+  },
+  {
+    "name": "HEROIC",
+    "shortName": "HER",
+    "region": "Europe",
+    "tier": "A",
+    "colors": { "primary": "#FF0000", "secondary": "#000000" },
+    "strategy": "Balanced",
+    "playStyle": "Tactical",
+    "roster": [
+      { "nickname": "kyxsan", "country": "MK", "role": "IGL", "age": 23, "stats": { "aim": 85, "reflexes": 85, "spray": 85, "sense": 92, "util": 90, "disc": 90 } },
+      { "nickname": "NertZ", "country": "IL", "role": "Rifle", "age": 25, "stats": { "aim": 92, "reflexes": 93, "spray": 90, "sense": 88, "util": 85, "disc": 85 } },
+      { "nickname": "TeSeS", "country": "DK", "role": "Support", "age": 24, "stats": { "aim": 89, "reflexes": 90, "spray": 92, "sense": 88, "util": 90, "disc": 90 } },
+      { "nickname": "sjuush", "country": "DK", "role": "Lurker", "age": 25, "stats": { "aim": 88, "reflexes": 88, "spray": 90, "sense": 90, "util": 92, "disc": 94 } },
+      { "nickname": "degster", "country": "RU", "role": "AWPer", "age": 23, "stats": { "aim": 94, "reflexes": 95, "spray": 85, "sense": 85, "util": 75, "disc": 70 } }
+    ]
+  },
+  {
+    "name": "Fluxo",
+    "shortName": "FX",
+    "region": "Americas",
+    "tier": "B",
+    "colors": { "primary": "#4B0082", "secondary": "#FFFFFF" },
+    "strategy": "Moneyball",
+    "playStyle": "Chaos",
+    "roster": [
+      { "nickname": "arT", "country": "BR", "role": "Entry", "age": 28, "stats": { "aim": 85, "reflexes": 88, "spray": 80, "sense": 90, "util": 75, "disc": 50 } },
+      { "nickname": "Lucaozy", "country": "BR", "role": "Rifle", "age": 23, "stats": { "aim": 94, "reflexes": 92, "spray": 90, "sense": 85, "util": 80, "disc": 80 } },
+      { "nickname": "vsm", "country": "BR", "role": "Lurker", "age": 25, "stats": { "aim": 90, "reflexes": 88, "spray": 88, "sense": 88, "util": 85, "disc": 85 } },
+      { "nickname": "zevy", "country": "BR", "role": "AWPer", "age": 23, "stats": { "aim": 89, "reflexes": 90, "spray": 82, "sense": 82, "util": 80, "disc": 85 } },
+      { "nickname": "nicks", "country": "BR", "role": "Support", "age": 19, "stats": { "aim": 85, "reflexes": 88, "spray": 84, "sense": 80, "util": 85, "disc": 80 } }
+    ]
+  },
+  {
+    "name": "RED Canids",
+    "shortName": "RED",
+    "region": "Americas",
+    "tier": "B",
+    "colors": { "primary": "#FF0000", "secondary": "#000000" },
+    "strategy": "Balanced",
+    "playStyle": "Tactical",
+    "roster": [
+      { "nickname": "coldzera", "country": "BR", "role": "Support", "age": 30, "stats": { "aim": 85, "reflexes": 80, "spray": 90, "sense": 98, "util": 90, "disc": 95 } },
+      { "nickname": "hen1", "country": "BR", "role": "AWPer", "age": 29, "stats": { "aim": 92, "reflexes": 88, "spray": 80, "sense": 88, "util": 80, "disc": 85 } },
+      { "nickname": "venomzera", "country": "BR", "role": "Rifle", "age": 20, "stats": { "aim": 90, "reflexes": 92, "spray": 85, "sense": 82, "util": 78, "disc": 80 } },
+      { "nickname": "dav1deus", "country": "CL", "role": "Entry", "age": 23, "stats": { "aim": 91, "reflexes": 93, "spray": 88, "sense": 80, "util": 75, "disc": 70 } },
+      { "nickname": "nython", "country": "BR", "role": "Rifle", "age": 26, "stats": { "aim": 88, "reflexes": 88, "spray": 85, "sense": 85, "util": 82, "disc": 88 } }
+    ]
+  },
+  {
+    "name": "Fnatic",
+    "shortName": "FNC",
+    "region": "Europe",
+    "tier": "B",
+    "colors": { "primary": "#FF5900", "secondary": "#000000" },
+    "strategy": "Balanced",
+    "playStyle": "Clutch Kings",
+    "roster": [
+      { "nickname": "KRIMZ", "country": "SE", "role": "Support", "age": 30, "stats": { "aim": 85, "reflexes": 80, "spray": 90, "sense": 95, "util": 90, "disc": 92 } },
+      { "nickname": "blameF", "country": "DK", "role": "IGL", "age": 27, "stats": { "aim": 95, "reflexes": 90, "spray": 94, "sense": 92, "util": 85, "disc": 80 } },
+      { "nickname": "matys", "country": "SK", "role": "Rifle", "age": 21, "stats": { "aim": 92, "reflexes": 94, "spray": 88, "sense": 85, "util": 80, "disc": 85 } },
+      { "nickname": "bodyy", "country": "FR", "role": "Lurker", "age": 27, "stats": { "aim": 88, "reflexes": 86, "spray": 88, "sense": 90, "util": 90, "disc": 90 } },
+      { "nickname": "afro", "country": "FR", "role": "AWPer", "age": 25, "stats": { "aim": 90, "reflexes": 90, "spray": 80, "sense": 85, "util": 82, "disc": 85 } }
+    ]
+  },
+  {
+    "name": "Ninjas in Pyjamas",
+    "shortName": "NIP",
+    "region": "Europe",
+    "tier": "B",
+    "colors": { "primary": "#D0FD3E", "secondary": "#000000" },
+    "strategy": "Academy",
+    "playStyle": "Aggressive",
+    "roster": [
+      { "nickname": "REZ", "country": "SE", "role": "Rifle", "age": 27, "stats": { "aim": 93, "reflexes": 92, "spray": 90, "sense": 85, "util": 80, "disc": 80 } },
+      { "nickname": "r1nkle", "country": "UA", "role": "AWPer", "age": 20, "stats": { "aim": 94, "reflexes": 96, "spray": 80, "sense": 85, "util": 80, "disc": 80 } },
+      { "nickname": "isak", "country": "SE", "role": "Support", "age": 23, "stats": { "aim": 85, "reflexes": 88, "spray": 88, "sense": 88, "util": 90, "disc": 90 } },
+      { "nickname": "MisteM", "country": "SE", "role": "IGL", "age": 22, "stats": { "aim": 82, "reflexes": 85, "spray": 82, "sense": 90, "util": 88, "disc": 85 } },
+      { "nickname": "maxster", "country": "SE", "role": "Entry", "age": 20, "stats": { "aim": 90, "reflexes": 92, "spray": 88, "sense": 82, "util": 80, "disc": 80 } }
+    ]
+  },
+  {
+    "name": "FlyQuest",
+    "shortName": "FLY",
+    "region": "Asia",
+    "tier": "B",
+    "colors": { "primary": "#FFFFFF", "secondary": "#10B981" },
+    "strategy": "Balanced",
+    "playStyle": "Aggressive",
+    "roster": [
+      { "nickname": "dexter", "country": "AU", "role": "IGL", "age": 30, "stats": { "aim": 85, "reflexes": 82, "spray": 85, "sense": 92, "util": 90, "disc": 88 } },
+      { "nickname": "INS", "country": "AU", "role": "Rifle", "age": 25, "stats": { "aim": 91, "reflexes": 90, "spray": 90, "sense": 88, "util": 85, "disc": 85 } },
+      { "nickname": "aliStair", "country": "AU", "role": "AWPer", "age": 25, "stats": { "aim": 88, "reflexes": 88, "spray": 80, "sense": 85, "util": 85, "disc": 85 } },
+      { "nickname": "Liazz", "country": "AU", "role": "Support", "age": 27, "stats": { "aim": 85, "reflexes": 85, "spray": 88, "sense": 88, "util": 90, "disc": 90 } },
+      { "nickname": "Vexite", "country": "AU", "role": "Entry", "age": 20, "stats": { "aim": 92, "reflexes": 94, "spray": 88, "sense": 82, "util": 80, "disc": 80 } }
+    ]
+  },
+  {
+    "name": "BIG",
+    "shortName": "BIG",
+    "region": "Europe",
+    "tier": "B",
+    "colors": { "primary": "#FFFFFF", "secondary": "#000000" },
+    "strategy": "Tactical",
+    "playStyle": "Tactical",
+    "roster": [
+      { "nickname": "tabseN", "country": "DE", "role": "IGL", "age": 29, "stats": { "aim": 90, "reflexes": 88, "spray": 92, "sense": 95, "util": 95, "disc": 90 } },
+      { "nickname": "syrsoN", "country": "DE", "role": "AWPer", "age": 28, "stats": { "aim": 94, "reflexes": 92, "spray": 75, "sense": 88, "util": 80, "disc": 85 } },
+      { "nickname": "Krimbo", "country": "DE", "role": "Support", "age": 21, "stats": { "aim": 88, "reflexes": 88, "spray": 90, "sense": 92, "util": 92, "disc": 92 } },
+      { "nickname": "JDC", "country": "DE", "role": "Rifle", "age": 24, "stats": { "aim": 88, "reflexes": 86, "spray": 88, "sense": 88, "util": 90, "disc": 90 } },
+      { "nickname": "prosus", "country": "DE", "role": "Entry", "age": 21, "stats": { "aim": 90, "reflexes": 92, "spray": 88, "sense": 85, "util": 80, "disc": 80 } }
+    ]
+  },
+  {
+    "name": "BetBoom Team",
+    "shortName": "BB",
+    "region": "Europe",
+    "tier": "B",
+    "colors": { "primary": "#FFFF00", "secondary": "#000000" },
+    "strategy": "Moneyball",
+    "playStyle": "Aggressive",
+    "roster": [
+      { "nickname": "nafany", "country": "RU", "role": "IGL", "age": 23, "stats": { "aim": 82, "reflexes": 85, "spray": 85, "sense": 90, "util": 92, "disc": 75 } },
+      { "nickname": "zorte", "country": "RU", "role": "AWPer", "age": 26, "stats": { "aim": 91, "reflexes": 90, "spray": 80, "sense": 88, "util": 85, "disc": 88 } },
+      { "nickname": "KaiR0N-", "country": "RU", "role": "Entry", "age": 20, "stats": { "aim": 93, "reflexes": 95, "spray": 88, "sense": 80, "util": 75, "disc": 70 } },
+      { "nickname": "s1ren", "country": "RU", "role": "Support", "age": 21, "stats": { "aim": 88, "reflexes": 88, "spray": 88, "sense": 88, "util": 88, "disc": 85 } },
+      { "nickname": "Magnojez", "country": "RU", "role": "Rifle", "age": 19, "stats": { "aim": 92, "reflexes": 94, "spray": 85, "sense": 82, "util": 78, "disc": 75 } }
+    ]
+  },
+  {
+    "name": "Wildcard",
+    "shortName": "WC",
+    "region": "Americas",
+    "tier": "C",
+    "colors": { "primary": "#DC2626", "secondary": "#000000" },
+    "strategy": "Balanced",
+    "playStyle": "Chaos",
+    "roster": [
+      { "nickname": "stanislaw", "country": "CA", "role": "IGL", "age": 30, "stats": { "aim": 78, "reflexes": 75, "spray": 80, "sense": 94, "util": 90, "disc": 88 } },
+      { "nickname": "Sonic", "country": "ZA", "role": "AWPer", "age": 25, "stats": { "aim": 88, "reflexes": 88, "spray": 80, "sense": 85, "util": 80, "disc": 85 } },
+      { "nickname": "JBa", "country": "US", "role": "Entry", "age": 20, "stats": { "aim": 90, "reflexes": 92, "spray": 85, "sense": 80, "util": 75, "disc": 75 } },
+      { "nickname": "slight", "country": "US", "role": "Support", "age": 22, "stats": { "aim": 85, "reflexes": 88, "spray": 85, "sense": 85, "util": 88, "disc": 85 } },
+      { "nickname": "phzy", "country": "SE", "role": "Rifle", "age": 22, "stats": { "aim": 89, "reflexes": 90, "spray": 88, "sense": 82, "util": 80, "disc": 80 } }
+    ]
+  }
 ]
