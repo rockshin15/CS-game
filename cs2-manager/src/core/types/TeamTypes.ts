@@ -1,18 +1,33 @@
 import type { Player } from "../classes/Player";
-// ... imports anteriores
 
+// Cores da Organização
 export interface TeamColors {
     primary: string;
     secondary: string;
 }
 
+// Níveis de organização
+export type TeamTier = 'S' | 'A' | 'B' | 'C';
+
+// Estratégias de contratação
+export type TeamStrategy = 'Superteam' | 'Moneyball' | 'Academy' | 'Balanced';
+
+// NOVO: Estilos de jogo (Personalidade do time)
+export type TeamPlayStyle = 'Aggressive' | 'Tactical' | 'Chaos' | 'Clutch Kings';
+
+// Conhecimento de mapa
+export interface MapPoolKnowledge {
+    [mapId: string]: number;
+}
+
+// A FICHA TÉCNICA UNIFICADA DO TIME
 export interface TeamAttributes {
   id: string;
   name: string;
   shortName: string;
   region: string;
   
-  // NOVO: Cores da Org
+  // Visual
   colors: TeamColors;
 
   // Economia e Status
@@ -20,42 +35,14 @@ export interface TeamAttributes {
   budget: number;
   prestige: number; 
   
-  // Tático
+  // Tático e Comportamental
   mapPool: MapPoolKnowledge;
   strategy: TeamStrategy;
+  playStyle: TeamPlayStyle; // A propriedade obrigatória nova
 }
 
-// ... resto do arquivo
-// Níveis de organização: S (Mundial) até C (Amador)
-export type TeamTier = 'S' | 'A' | 'B' | 'C';
-
-// Estrutura do conhecimento de mapa (0-100 para cada mapa)
-export interface MapPoolKnowledge {
-  [mapId: string]: number;
-}
-
-// Estratégias da IA para montar times
-export type TeamStrategy = 'Superteam' | 'Moneyball' | 'Academy' | 'Balanced';
-
-// A "Ficha Técnica" do time
-export interface TeamAttributes {
-  id: string;
-  name: string;
-  shortName: string; // Ex: "FUR", "NAVI"
-  region: string;
-  
-  // Economia e Status
-  tier: TeamTier;
-  budget: number;
-  prestige: number; // 0-100
-  
-  // Tático
-  mapPool: MapPoolKnowledge;
-  strategy: TeamStrategy;
-}
-
-// O estado atual do time (jogadores)
+// Estado do time (Elenco)
 export interface TeamState {
   roster: Player[];
-  activeLineup: Player[]; // Os 5 titulares
+  activeLineup: Player[];
 }

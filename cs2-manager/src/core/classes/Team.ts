@@ -1,57 +1,52 @@
-// src/core/classes/Team.ts
-
-import type { TeamAttributes, TeamState, TeamTier, MapPoolKnowledge, TeamStrategy, TeamColors } from '../types/TeamTypes';
+import type { TeamAttributes, TeamState, TeamTier, MapPoolKnowledge, TeamStrategy, TeamColors, TeamPlayStyle } from '../types/TeamTypes';
 import { Player } from './Player';
 import mapsData from '../../data/maps.json'; 
-import { getRandomInt } from '../utils/rng';
+import { getRandomInt, getRandomItem } from '../utils/rng';
 import { generateTeamIdentity } from '../utils/teamGenerator';
 
 export class Team implements TeamAttributes {
-  // --- 1. Propriedades da Interface TeamAttributes ---
   id: string;
   name: string;
   shortName: string;
   region: string;
-  colors: TeamColors; // NOVO: Cores (Primária/Secundária)
+  colors: TeamColors;
   tier: TeamTier;
   strategy: TeamStrategy;
+  
+  // NOVO: Implementação da propriedade obrigatória
+  playStyle: TeamPlayStyle;
+  
   budget: number;
   prestige: number;
   mapPool: MapPoolKnowledge;
 
-  // --- 2. Propriedades de Estado (Do TeamState) ---
   roster: Player[];
   activeLineup: Player[];
 
-  // O construtor agora é inteligente: Gera identidade baseada no Tier
   constructor(tier: TeamTier, existingNames: string[] = []) {
     this.id = crypto.randomUUID();
     this.tier = tier;
     
-    // 1. Gera Identidade (Nome, Tag, Região, Cores) automaticamente
     const identity = generateTeamIdentity(existingNames);
     this.name = identity.name;
     this.shortName = identity.shortName;
     this.region = identity.region;
     this.colors = identity.colors;
 
-    // 2. Define Estratégia baseada no Tier
     this.strategy = this.determineStrategyByTier(tier);
+    
+    // NOVO: Define o estilo aleatoriamente na criação
+    this.playStyle = this.determinePlayStyle();
 
-    // 3. Inicializa Listas
     this.roster = [];
     this.activeLineup = []; 
 
-    // 4. Inicializa Economia e Prestígio
     const { budget, prestige } = this.initializeEconomy(tier);
     this.budget = budget;
     this.prestige = prestige;
 
-    // 5. Inicializa Map Pool
     this.mapPool = this.generateInitialMapPool(tier);
   }
-
-  // --- 3. Métodos Auxiliares ---
 
   get state(): TeamState {
     return {
@@ -60,10 +55,15 @@ export class Team implements TeamAttributes {
     };
   }
 
-  // Define como a IA monta o time baseado no dinheiro/tier
+  // Sorteia o estilo de jogo
+  private determinePlayStyle(): TeamPlayStyle {
+    const styles: TeamPlayStyle[] = ['Aggressive', 'Tactical', 'Chaos', 'Clutch Kings'];
+    return getRandomItem(styles);
+  }
+
   private determineStrategyByTier(tier: TeamTier): TeamStrategy {
     if (tier === 'S') return Math.random() > 0.7 ? 'Superteam' : 'Balanced';
-    if (tier === 'B') return 'Moneyball'; // Times médios buscam custo-benefício
+    if (tier === 'B') return 'Moneyball'; 
     if (tier === 'C') return Math.random() > 0.5 ? 'Academy' : 'Balanced';
     return 'Balanced';
   }
@@ -79,8 +79,8 @@ export class Team implements TeamAttributes {
 
   private generateInitialMapPool(tier: TeamTier): MapPoolKnowledge {
     const pool: MapPoolKnowledge = {};
-    
     let minBase = 0, maxBase = 0;
+    
     if (tier === 'S') { minBase = 60; maxBase = 90; }
     else if (tier === 'A') { minBase = 50; maxBase = 80; }
     else if (tier === 'B') { minBase = 30; maxBase = 70; }
@@ -97,8 +97,6 @@ export class Team implements TeamAttributes {
   addPlayer(player: Player): void {
     if (this.roster.length >= 10) return;
     this.roster.push(player);
-    
-    // Auto-complete: Se tiver espaço na lineup titular (menos de 5), coloca ele lá automaticamente
     if (this.activeLineup.length < 5) {
         this.activeLineup.push(player);
     }
@@ -106,7 +104,6 @@ export class Team implements TeamAttributes {
 
   getAverageOverall(): number {
     if (this.activeLineup.length === 0) return 0;
-    // Calcula a força baseada nos TITULARES, não no elenco todo
     return Math.round(this.activeLineup.reduce((acc, p) => acc + p.overall, 0) / this.activeLineup.length);
   }
 }
