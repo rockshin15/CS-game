@@ -92,7 +92,11 @@ export class MatchEngine {
                 scoreA,
                 scoreB,
                 roundResult.reason === RoundEndReason.BOMB_EXPLODED || roundResult.reason === RoundEndReason.BOMB_DEFUSED,
-                roundResult.killEvents.length > 0 && roundResult.killEvents[roundResult.killEvents.length - 1].context === 'clutch'
+                roundResult.killEvents.length > 0 && roundResult.killEvents[roundResult.killEvents.length - 1].context === 'clutch',
+                winnerId === teamA.id ? buyA.type : buyB.type,
+                winnerId === teamA.id ? buyB.type : buyA.type,
+                winnerId === teamA.id ? moneyA : moneyB,
+                winnerId === teamA.id ? moneyB : moneyA
             );
             
             let sideWinner: Side = 'CT';
@@ -141,7 +145,7 @@ export class MatchEngine {
         if (enemyScore === 12 || roundNum === 1 || roundNum === 13 || roundNum === 24) {
              const isPistol = roundNum === 1 || roundNum === 13;
              return { 
-                 type: (isPistol ? EconState.PISTOL : EconState.FORCE) as LoadoutType, 
+                 type: (isPistol ? EconState.ECO : EconState.FORCE) as LoadoutType, 
                  cost: money, 
                  powerMultiplier: isPistol ? 1.0 : (money >= 3500 ? 1.0 : 0.85) 
              };

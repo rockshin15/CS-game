@@ -22,11 +22,19 @@ export const MatchTestScreen: React.FC = () => {
     };
 
     const handleSimulate = () => {
+        console.log("--- Iniciando Simulação ---");
         if (teamA && teamB) {
-            // Agora passamos 'mirage' explicitamente
-            // Isso ativa a lógica de Side Bias e a Economia no MatchEngine
-            const matchResult = MatchEngine.simulateMatch(teamA, teamB, 'mirage');
-            setResult(matchResult);
+            try {
+                // Agora passamos 'mirage' explicitamente
+                // Isso ativa a lógica de Side Bias e a Economia no MatchEngine
+                const matchResult = MatchEngine.simulateMatch(teamA, teamB, 'mirage');
+                
+                console.log("Resultado gerado com sucesso:", matchResult);
+                setResult(matchResult);
+            } catch (error) {
+                console.error("ERRO CRÍTICO NA SIMULAÇÃO:", error);
+                alert("Erro ao rodar simulação. Verifique o console (F12) para detalhes.");
+            }
         }
     };
 
@@ -191,7 +199,8 @@ const LoadoutBadge = ({ type, label }: { type: string, label: string }) => {
     let bg = '#f0fdf4';
     
     if (type === 'Force Buy') { color = '#eab308'; bg = '#fefce8'; } // Amarelo
-    if (type === 'Eco') { color = '#ef4444'; bg = '#fef2f2'; } // Vermelho
+    // Adicionado tratamento para 'Pistol' aqui para evitar quebras visuais se o backend enviar
+    if (type === 'Eco' || type === 'Pistol') { color = '#ef4444'; bg = '#fef2f2'; } // Vermelho
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '55px' }}>
@@ -207,7 +216,8 @@ const LoadoutBadge = ({ type, label }: { type: string, label: string }) => {
                 textAlign: 'center',
                 display: 'block'
             }} title={type}>
-                {type === 'Full Buy' ? 'FULL' : type === 'Force Buy' ? 'FORCE' : 'ECO'}
+                {/* Normaliza o texto para exibição */}
+                {type === 'Full Buy' ? 'FULL' : type === 'Force Buy' ? 'FORCE' : type === 'Pistol' ? 'PISTOL' : 'ECO'}
             </span>
             <span style={{ fontSize: '9px', color: '#9ca3af', marginTop: '2px' }}>
                 {label}
