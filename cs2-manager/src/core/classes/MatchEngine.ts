@@ -62,6 +62,7 @@ export class MatchEngine {
                 rounds.push({
                     roundNumber: 0, winnerId: 'SYSTEM', sideWinner: 'CT', 
                     message: `🔄 HALFTIME! Reset Econômico & Troca de Lados.`,
+                    killFeed: [],
                     loadoutA: 'Full Buy', loadoutB: 'Full Buy', moneyA: moneyA, moneyB: moneyB
                 });
             }
@@ -122,10 +123,15 @@ export class MatchEngine {
             }
 
             rounds.push({
-                roundNumber, winnerId, sideWinner, 
+                roundNumber, 
+                winnerId, 
+                sideWinner, 
                 message: narrative.finalNarrative,
-                loadoutA: buyA.type, loadoutB: buyB.type,
-                moneyA: moneyA, moneyB: moneyB
+                killFeed: narrative.killFeed, // <--- ADICIONE ESTA LINHA (Vem do narrative.killFeed)
+                loadoutA: buyA.type, 
+                loadoutB: buyB.type,
+                moneyA: moneyA, 
+                moneyB: moneyB
             });
 
             roundNumber++;

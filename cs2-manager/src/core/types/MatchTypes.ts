@@ -1,8 +1,7 @@
 // src/core/types/MatchTypes.ts
+import type { KillEvent } from "../../features/narratives/NarrativeTypes"; // <--- Importe isso
 
 export type Side = 'CT' | 'TR';
-
-// Novo tipo para controlar o que foi comprado
 export type LoadoutType = 'Full Buy' | 'Force Buy' | 'Eco';
 
 export interface RoundLog {
@@ -11,21 +10,16 @@ export interface RoundLog {
     sideWinner: Side;
     message: string;
     
-    // Dados Econômicos para o Log
+    // Adicionamos este campo vital
+    killFeed: KillEvent[]; 
+
+    // Dados Econômicos existentes
     loadoutA: LoadoutType;
     loadoutB: LoadoutType;
     moneyA: number;
     moneyB: number;
 }
 
-export interface MatchResult {
-    winnerId: string;
-    loserId: string;
-    scoreA: number;
-    scoreB: number;
-    mapName: string;
-    rounds: RoundLog[]; // Histórico completo
-}
 export interface MatchResult {
     winnerId: string;
     loserId: string;

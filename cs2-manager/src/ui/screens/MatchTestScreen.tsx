@@ -3,6 +3,8 @@ import { Team } from '../../core/classes/Team';
 import { Player } from '../../core/classes/Player';
 import { MatchEngine } from '../../core/classes/MatchEngine';
 import type { MatchResult } from '../../core/types/MatchTypes';
+// [Passo 4] Importação do novo componente
+import { KillFeed } from '../components/KillFeed';
 
 export const MatchTestScreen: React.FC = () => {
     // Estado para os dois times e o resultado
@@ -25,7 +27,7 @@ export const MatchTestScreen: React.FC = () => {
         console.log("--- Iniciando Simulação ---");
         if (teamA && teamB) {
             try {
-                // Agora passamos 'mirage' explicitamente
+                // Passamos 'mirage' explicitamente
                 // Isso ativa a lógica de Side Bias e a Economia no MatchEngine
                 const matchResult = MatchEngine.simulateMatch(teamA, teamB, 'mirage');
                 
@@ -93,7 +95,7 @@ export const MatchTestScreen: React.FC = () => {
                 </div>
             </div>
 
-            {/* RESULTADO DETALHADO (NOVO LOG COM BADGES) */}
+            {/* RESULTADO DETALHADO (NOVO LOG COM BADGES E KILLFEED) */}
             {result && (
                 <div style={{ 
                     marginTop: '40px', 
@@ -115,41 +117,9 @@ export const MatchTestScreen: React.FC = () => {
                         padding: '10px',
                         border: '1px solid #e5e7eb'
                     }}>
+                        {/* [Passo 4] Substituição do map antigo pelo novo componente RoundRow */}
                         {result.rounds.map((round, index) => (
-                            <div key={index} style={{ 
-                                padding: '8px', 
-                                borderBottom: '1px solid #f0f0f0',
-                                backgroundColor: round.roundNumber === 0 ? '#eff6ff' : 'transparent', // Destaque para Halftime
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                fontSize: '13px'
-                            }}>
-                                {round.roundNumber > 0 ? (
-                                    <>
-                                        {/* Número do Round */}
-                                        <span style={{ fontWeight: 'bold', color: '#9ca3af', minWidth: '25px' }}>
-                                            #{round.roundNumber}
-                                        </span>
-                                        
-                                        {/* Badge Time A (Esquerda) */}
-                                        <LoadoutBadge type={round.loadoutA} label={round.moneyA >= 10000 ? '$$$' : '$'} />
-                                        
-                                        {/* Mensagem Central */}
-                                        <span style={{ flex: 1, textAlign: 'center', color: '#374151' }}>
-                                            {round.message}
-                                        </span>
-                                        
-                                        {/* Badge Time B (Direita) */}
-                                        <LoadoutBadge type={round.loadoutB} label={round.moneyB >= 10000 ? '$$$' : '$'} />
-                                    </>
-                                ) : (
-                                    /* Mensagem de Sistema (Halftime) */
-                                    <span style={{ color: '#1d4ed8', fontWeight: 'bold', width: '100%', textAlign: 'center' }}>
-                                        {round.message}
-                                    </span>
-                                )}
-                            </div>
+                            <RoundRow key={index} round={round} />
                         ))}
                     </div>
                 </div>
@@ -199,7 +169,6 @@ const LoadoutBadge = ({ type, label }: { type: string, label: string }) => {
     let bg = '#f0fdf4';
     
     if (type === 'Force Buy') { color = '#eab308'; bg = '#fefce8'; } // Amarelo
-    // Adicionado tratamento para 'Pistol' aqui para evitar quebras visuais se o backend enviar
     if (type === 'Eco' || type === 'Pistol') { color = '#ef4444'; bg = '#fef2f2'; } // Vermelho
 
     return (
@@ -222,6 +191,56 @@ const LoadoutBadge = ({ type, label }: { type: string, label: string }) => {
             <span style={{ fontSize: '9px', color: '#9ca3af', marginTop: '2px' }}>
                 {label}
             </span>
+        </div>
+    );
+};
+
+// [Passo 4] Componente auxiliar para linha de Round com Toggle
+const RoundRow = ({ round }: { round: MatchResult['rounds'][number] }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    if (round.roundNumber === 0) {
+        return (
+            <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#eff6ff', color: '#1d4ed8', fontWeight: 'bold', textAlign: 'center' }}>
+                {round.message}
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: isOpen ? '#f9fafb' : 'transparent' }}>
+            {/* Linha de Resumo (Clicável) */}
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                style={{
+                    padding: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                }}
+            >
+                <span style={{ fontWeight: 'bold', color: '#9ca3af', minWidth: '25px' }}>#{round.roundNumber}</span>
+                <LoadoutBadge type={round.loadoutA} label={round.moneyA >= 10000 ? '$$$' : '$'} />
+
+                <span style={{ flex: 1, textAlign: 'center', color: '#374151', display: 'flex', flexDirection: 'column' }}>
+                    <span>{round.message}</span>
+                    {isOpen ?
+                        <span style={{ fontSize: '10px', color: '#ef4444' }}>Ocultar Detalhes ▲</span> :
+                        <span style={{ fontSize: '10px', color: '#3b82f6' }}>Ver Kill Feed ▼</span>
+                    }
+                </span>
+
+                <LoadoutBadge type={round.loadoutB} label={round.moneyB >= 10000 ? '$$$' : '$'} />
+            </div>
+
+            {/* Área Expandida: Kill Feed */}
+            {isOpen && (
+                <div style={{ padding: '0 15px 15px 15px' }}>
+                    <KillFeed events={round.killFeed} />
+                </div>
+            )}
         </div>
     );
 };
