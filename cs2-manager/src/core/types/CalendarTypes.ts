@@ -67,3 +67,28 @@ export interface CalendarEvent {
   // NOVO CAMPO:
   status: EventStatus; 
 }
+// Adicione/Atualize no arquivo src/core/types/CalendarTypes.ts
+
+export type TournamentFormat = 'SWISS' | 'GSL_GROUPS' | 'SINGLE_ELIMINATION' | 'LEAGUE';
+
+export interface CalendarEvent {
+  id: string;
+  name: string;
+  type: EventType;
+  tier: EventTier;
+  
+  startMonth: Month;
+  startWeek: number;
+  durationWeeks: number;
+
+  prestige: number;
+  fatigueCost: number;
+  prizePool: number;
+  minTeamTier: string; // 'S', 'A', 'B', etc.
+  
+  status: EventStatus;
+  
+  // NOVO: Define a estrutura interna
+  format: TournamentFormat; 
+  totalTeams: number; // Quantos times participam (8, 16, 24)
+}

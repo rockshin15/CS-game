@@ -1,6 +1,25 @@
-import React, { createContext, useState, useEffect } from 'react';
-import type{ CalendarEvent, GameDate } from '../../core/types/CalendarTypes';
+import React, { createContext, useState } from 'react';
+import type { CalendarEvent, GameDate } from '../../core/types/CalendarTypes';
+import type { TeamAttributes } from '../../core/types/TeamTypes';
 import { CalendarGenerator, MONTHS } from '../../features/calendar/CalendarGenerator';
+
+import { TournamentInviter } from '../../features/tournaments/TournamentInviter';
+import { TournamentStructure } from '../../features/tournaments/TournamentStructure';
+import realTeams from '../../data/realTeams.json';
+
+// --- TIPOS AUXILIARES ---
+
+// Define a estrutura exata que o SwissPairings espera
+type SwissStanding = {
+  wins: number;
+  losses: number;
+  played: string[];
+};
+
+// Usamos 'any' aqui intencionalmente para aceitar 'MatchPairing' ou qualquer formato de partida
+// que venha do TournamentStructure, sem travar o build.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Match = any;
 
 type GameState = {
   date: GameDate;
@@ -8,47 +27,80 @@ type GameState = {
   upcomingEvents: CalendarEvent[];
   fullSchedule: CalendarEvent[];
   
-  // Recursos do Jogador
-  managerFatigue: number; // 0 a 100 (Quanto maior, pior o time joga)
-  teamMoney: number;      // Dinheiro em caixa
-  teamRankingPoints: number; // Pontos de Ranking
+  managerFatigue: number;
+  teamMoney: number;
+  teamRankingPoints: number;
+
+  currentMatches: Match[]; 
 };
+
+// --- LÓGICA DE INICIALIZAÇÃO DE TORNEIO ---
+function onTournamentStart(event: CalendarEvent, userTeamId: string): Match[] {
+  // Conversão Dupla: Força o JSON a ser aceito como TeamAttributes[] ignorando campos faltantes
+  const allTeamsTyped = realTeams as unknown as TeamAttributes[];
+  
+  const participants = TournamentInviter.getParticipants(
+    allTeamsTyped,
+    event,
+    userTeamId
+  );
+
+  console.log(`Iniciando ${event.name} com ${participants.length} times.`);
+
+  let matches: Match[] = [];
+
+  if (event.format === 'SWISS') {
+    // Agora tipado corretamente como SwissStanding para satisfazer a função geradora
+    const initialStandings: Record<string, SwissStanding> = {};
+    
+    participants.forEach((p) => {
+        initialStandings[p.id] = { wins: 0, losses: 0, played: [] };
+    });
+    
+    matches = TournamentStructure.generateSwissPairings(participants, initialStandings);
+  } 
+  else if (event.format === 'GSL_GROUPS') {
+    matches = TournamentStructure.generateGSLOpening(participants.slice(0, 4));
+  }
+  else if (event.format === 'SINGLE_ELIMINATION') {
+    matches = TournamentStructure.generatePlayoffs(participants);
+  }
+
+  return matches;
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export const GameContext = createContext<{
   state: GameState;
   advanceWeek: () => void;
-  handleEventDecision: (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => void; // Nova função exposta
+  handleEventDecision: (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => void;
 } | null>(null);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<GameState>({
-    date: { week: 1, month: 'Jan', year: 2025 },
-    activeEvents: [],
-    upcomingEvents: [],
-    fullSchedule: [],
-    managerFatigue: 0,
-    teamMoney: 50000,
-    teamRankingPoints: 1000
+  // Inicialização Lazy (dentro da função) para evitar erro de setState síncrono
+  const [state, setState] = useState<GameState>(() => {
+    const schedule = CalendarGenerator.generateYearlySchedule(2025);
+    return {
+        date: { week: 1, month: 'Jan', year: 2025 },
+        activeEvents: [],
+        upcomingEvents: [],
+        fullSchedule: schedule,
+        managerFatigue: 0,
+        teamMoney: 50000,
+        teamRankingPoints: 1000,
+        currentMatches: []
+    };
   });
 
-  useEffect(() => {
-    const schedule = CalendarGenerator.generateYearlySchedule(2025);
-    setState(prev => ({ ...prev, fullSchedule: schedule }));
-  }, []);
-
-  // --- LÓGICA 1: TOMADA DE DECISÃO ---
   const handleEventDecision = (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => {
     setState(prev => {
       const newSchedule = prev.fullSchedule.map(ev => {
         if (ev.id === eventId) {
-            // Regra básica: Não pode aceitar dois eventos na mesma data (simplificado)
-            // Aqui você poderia adicionar verificação de conflito de datas
             return { ...ev, status: decision };
         }
         return ev;
       });
 
-      // Se recusou um evento importante (Tier S), perde prestígio imediatamente?
       let prestigePenalty = 0;
       const targetEvent = prev.fullSchedule.find(e => e.id === eventId);
       if (decision === 'DECLINED' && targetEvent?.tier === 'S') {
@@ -63,13 +115,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // --- LÓGICA 2: AVANÇAR O TEMPO E SOFRER CONSEQUÊNCIAS ---
   const advanceWeek = () => {
     setState(prev => {
-      let { week, month, year } = prev.date;
+      // Correção: Usar 'const' aqui pois não reatribuímos estas variáveis, criamos novas abaixo
+      const { week, month, year } = prev.date;
       
-      // 1. Processar Efeitos da Semana ATUAL antes de mudar
-      // Se estamos jogando um evento ACEITO nesta semana, aumenta fadiga
+      // 1. Processar Efeitos da Semana ATUAL
       const currentActiveEvents = prev.fullSchedule.filter(ev => 
         ev.status === 'ACCEPTED' &&
         ev.startMonth === month && 
@@ -77,40 +128,58 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         week < (ev.startWeek + ev.durationWeeks)
       );
 
-      let fatigueChange = -5; // Recuperação natural base (descanso)
+      let fatigueChange = -5; 
       
       if (currentActiveEvents.length > 0) {
-        // Se está jogando, soma o custo de fadiga do evento (dividido pela duração pra não aplicar tudo de uma vez)
         currentActiveEvents.forEach(ev => {
            fatigueChange += (ev.fatigueCost / ev.durationWeeks);
         });
       } else {
-        // Se não tem evento, recupera mais rápido (Training Week)
         fatigueChange = -15; 
       }
 
-      // 2. Avança Data
-      week++;
-      if (week > 4) {
-        week = 1;
+      // 2. Calcular Nova Data
+      let nextWeek = week + 1;
+      let nextMonth = month;
+      let nextYear = year;
+
+      if (nextWeek > 4) {
+        nextWeek = 1;
         const monthIndex = MONTHS.indexOf(month);
         if (monthIndex === 11) {
-            month = 'Jan'; year++;
+            nextMonth = 'Jan'; 
+            nextYear++;
         } else {
-            month = MONTHS[monthIndex + 1];
+            nextMonth = MONTHS[monthIndex + 1];
         }
       }
 
-      // 3. Atualiza estado
+      // 3. Verificar se algum torneio COMEÇA na nova data
+      let newMatches = prev.currentMatches;
+      
+      const startingEvent = prev.fullSchedule.find(ev => 
+        ev.status === 'ACCEPTED' &&
+        ev.startMonth === nextMonth &&
+        ev.startWeek === nextWeek
+      );
+
+      if (startingEvent) {
+          // Substitua 'user-team-id' pelo ID real do seu time
+          newMatches = onTournamentStart(startingEvent, 'user-team-id');
+      }
+
+      // 4. Retorna novo estado imutável
       return {
         ...prev,
-        date: { week, month, year },
+        date: { week: nextWeek, month: nextMonth, year: nextYear },
         managerFatigue: Math.min(100, Math.max(0, prev.managerFatigue + fatigueChange)),
-        // Recalcula ativos para a nova semana visualmente
         activeEvents: prev.fullSchedule.filter(ev => 
-            ev.status === 'ACCEPTED' && // Só mostra como "Ativo" se aceitamos
-            ev.startMonth === month && week >= ev.startWeek && week < (ev.startWeek + ev.durationWeeks)
-        )
+            ev.status === 'ACCEPTED' && 
+            ev.startMonth === nextMonth && 
+            nextWeek >= ev.startWeek && 
+            nextWeek < (ev.startWeek + ev.durationWeeks)
+        ),
+        currentMatches: newMatches
       };
     });
   };

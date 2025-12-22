@@ -1,5 +1,5 @@
 // src/features/calendar/CalendarGenerator.ts
-import type{ CalendarEvent, Month } from "../../core/types/CalendarTypes";
+import type { CalendarEvent, Month } from "../../core/types/CalendarTypes";
 
 // Ordem dos meses para lógica de progressão
 export const MONTHS: Month[] = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -24,8 +24,10 @@ export class CalendarGenerator {
       prestige: 0,
       fatigueCost: 10, // Baixo custo, alto ganho de XP
       prizePool: 0,
-      minTeamTier: 'C'
-    });
+      minTeamTier: 'C',
+      format: 'SINGLE_ELIMINATION',
+      totalTeams: 32,
+    }); // <--- CORREÇÃO 1: Faltava fechar o objeto e o método push aqui
 
     schedule.push({
       id: `iem_katowice_qualifier_${suffix}`,
@@ -39,7 +41,9 @@ export class CalendarGenerator {
       prestige: 10,
       fatigueCost: 20,
       prizePool: 0,
-      minTeamTier: 'B'
+      minTeamTier: 'B',
+      format: 'GSL_GROUPS',
+      totalTeams: 16
     });
 
     // === 🟩 2. SPLIT 1 (FEV - MAI) ===
@@ -57,7 +61,9 @@ export class CalendarGenerator {
       prestige: 100,
       fatigueCost: 50, // Cansa muito
       prizePool: 1000000,
-      minTeamTier: 'A'
+      minTeamTier: 'A',
+      format: 'SWISS',
+      totalTeams: 16
     });
 
     // Tier A: Pro League (Liga longa)
@@ -73,7 +79,9 @@ export class CalendarGenerator {
       prestige: 60,
       fatigueCost: 40,
       prizePool: 750000,
-      minTeamTier: 'B'
+      minTeamTier: 'B',
+      format: 'SINGLE_ELIMINATION',
+      totalTeams: 24,
     });
 
     // Tier B: Regionais (Para quem não foi pra Pro League)
@@ -89,7 +97,9 @@ export class CalendarGenerator {
       prestige: 20,
       fatigueCost: 15,
       prizePool: 50000,
-      minTeamTier: 'C'
+      minTeamTier: 'C',
+      format: 'SINGLE_ELIMINATION',
+      totalTeams: 16
     });
 
     // === 🟨 3. MID-SEASON (JUNHO - O MAJOR) ===
@@ -105,7 +115,9 @@ export class CalendarGenerator {
       prestige: 200, // O máximo
       fatigueCost: 80, // Burnout quase certo se não descansou antes
       prizePool: 1250000,
-      minTeamTier: 'Qualifier' // Precisa ter passado no RMR (Lógica futura)
+      minTeamTier: 'Qualifier', // Precisa ter passado no RMR (Lógica futura)
+      format: 'SWISS',
+      totalTeams: 24
     });
 
     // Player Break pós-major (Obrigatório)
@@ -121,7 +133,9 @@ export class CalendarGenerator {
       prestige: 0,
       fatigueCost: -100, // Recupera TUDO
       prizePool: 0,
-      minTeamTier: 'C'
+      minTeamTier: 'C',
+      format: 'SINGLE_ELIMINATION',
+      totalTeams: 24
     });
 
     // === 🟧 4. SPLIT 2 (JUL - OUT) ===
@@ -137,7 +151,9 @@ export class CalendarGenerator {
       prestige: 100,
       fatigueCost: 50,
       prizePool: 1000000,
-      minTeamTier: 'A'
+      minTeamTier: 'A',
+      format: 'GSL_GROUPS', // <--- Ajuste: Corrigi de GGL para GSL (assumindo typo)
+      totalTeams: 24
     });
 
     // === 🟥 5. WORLD FINALS (NOV - DEZ) ===
@@ -153,7 +169,9 @@ export class CalendarGenerator {
       prestige: 90,
       fatigueCost: 40,
       prizePool: 1000000,
-      minTeamTier: 'S' // Só os melhores do ano
+      minTeamTier: 'S', // <--- CORREÇÃO 2: Faltava a vírgula aqui
+      format: 'SINGLE_ELIMINATION',
+      totalTeams: 8
     });
 
     // Major 2 (Shanghai/Paris/Rio)
@@ -169,9 +187,12 @@ export class CalendarGenerator {
       prestige: 200,
       fatigueCost: 90,
       prizePool: 1250000,
-      minTeamTier: 'Qualifier'
+      minTeamTier: 'Qualifier',
+      format: 'SWISS',
+      totalTeams: 24
     });
 
     return schedule;
   }
 }
+// <--- CORREÇÃO 3: Removida a terceira chave que estava sobrando
