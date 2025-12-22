@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { GameContext } from '../context/GameContext';
+import { GameContext } from '../context/GameContextVals';
 import type { CalendarEvent, Month } from '../../core/types/CalendarTypes'; // Corrigido typo "type{"
 import { MONTHS } from '../../features/calendar/CalendarGenerator';
 import { Button } from '../components/Button';
