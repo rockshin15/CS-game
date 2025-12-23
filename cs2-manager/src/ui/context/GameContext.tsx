@@ -313,9 +313,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         // Executa a simulação
         // O cast 'as unknown as Team' é usado porque o MatchEngine espera instâncias da classe Team,
         // mas nossos dados vêm como JSON/TeamAttributes. 
+        const teamAInstance = Team.fromJSON(match.teamA); 
+        const teamBInstance = Team.fromJSON(match.teamB);
+
         return MatchEngine.simulateMatch(
-            match.teamA as unknown as Team, 
-            match.teamB as unknown as Team, 
+            teamAInstance,
+            teamBInstance,
             randomMap
         );
     });

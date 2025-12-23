@@ -15,6 +15,18 @@ export class Player {
   overall: number;
   stats: PlayerStats;
 
+  // --- CORREÇÃO: Usamos Partial<Player> em vez de any ---
+  static fromJSON(data: Partial<Player>): Player {
+    // 1. Cria a instância vazia e força a tipagem 'as Player' para o TS entender
+    const instance = Object.create(Player.prototype) as Player;
+
+    // 2. Copia as propriedades. O TypeScript aceita porque 'data' é compatível com Player
+    Object.assign(instance, data);
+
+    return instance;
+  }
+  // -----------------------------------------------------
+
   constructor() {
     this.id = Date.now().toString(36) + Math.random().toString(36).slice(2);
     this.nickname = generateNick();
@@ -46,7 +58,6 @@ export class Player {
 
   private generateAttributesByAge(age: number): PlayerAttributes {
     // Base Genética (Talento natural independente da idade)
-    // Começamos mais baixo para que os bônus de idade façam diferença real
     let aim = getRandomInt(50, 85);
     let reflex = getRandomInt(50, 85);
     const spray = getRandomInt(50, 85);
@@ -58,56 +69,51 @@ export class Player {
     // === A CURVA DA VIDA ===
 
     // FASE 1: O WONDERKID (16-18)
-    // Muito rápidos, muito crus.
     if (age <= 18) {
-        reflex += getRandomInt(15, 25);   // Reflexo sobre-humano
-        aim += getRandomInt(5, 15);       // Mira instintiva
+        reflex += getRandomInt(15, 25);
+        aim += getRandomInt(5, 15);
         
-        sense -= getRandomInt(15, 30);    // "Burro" taticamente
-        util -= getRandomInt(10, 20);     // Erra granadas
-        disc -= getRandomInt(20, 30);     // Afobado (W-Key)
+        sense -= getRandomInt(15, 30);
+        util -= getRandomInt(10, 20);
+        disc -= getRandomInt(20, 30);
     }
     
-    // FASE 2: O PICO MECÂNICO (19-23) [Foco do seu pedido]
-    // O auge físico. Onde a mira encontra a confiança.
+    // FASE 2: O PICO MECÂNICO (19-23)
     else if (age <= 23) {
-        reflex += getRandomInt(10, 20);   // Ainda muito rápido
-        aim += getRandomInt(10, 25);      // No auge da precisão (Muscle Memory)
+        reflex += getRandomInt(10, 20);
+        aim += getRandomInt(10, 25);
         
-        sense -= getRandomInt(5, 15);     // Ainda cometem erros
-        disc -= getRandomInt(5, 15);      // Ainda agressivos demais
+        sense -= getRandomInt(5, 15);
+        disc -= getRandomInt(5, 15);
     }
 
     // FASE 3: O PRIME (24-27)
-    // O equilíbrio. Perde um pouco de velocidade, ganha consistência.
     else if (age <= 27) {
-        reflex += getRandomInt(0, 5);     // Estagnou
-        aim += getRandomInt(5, 10);       // Mira consistente
+        reflex += getRandomInt(0, 5);
+        aim += getRandomInt(5, 10);
         
-        sense += getRandomInt(5, 15);     // Começa a ler o jogo bem
-        disc += getRandomInt(5, 15);      // Disciplinado
+        sense += getRandomInt(5, 15);
+        disc += getRandomInt(5, 15);
     }
 
     // FASE 4: O DECLÍNIO MECÂNICO (28-31)
-    // O corpo sente, a mente compensa.
     else if (age <= 31) {
-        reflex -= getRandomInt(10, 20);   // Queda visível de reação
-        aim -= getRandomInt(0, 10);       // Mira "cansada"
+        reflex -= getRandomInt(10, 20);
+        aim -= getRandomInt(0, 10);
         
-        sense += getRandomInt(15, 25);    // Leitura de jogo avançada
-        util += getRandomInt(10, 20);     // Mestre das utilities
-        disc += getRandomInt(15, 25);     // Joga pro time (Clutch player)
+        sense += getRandomInt(15, 25);
+        util += getRandomInt(10, 20);
+        disc += getRandomInt(15, 25);
     }
 
     // FASE 5: A LENDA / PROFESSOR (32+)
-    // Só joga no cérebro.
     else {
-        reflex -= getRandomInt(20, 35);   // Lento para trocação direta
-        aim -= getRandomInt(10, 20);      // Perde duelos de mira pura
+        reflex -= getRandomInt(20, 35);
+        aim -= getRandomInt(10, 20);
         
-        sense += getRandomInt(25, 40);    // Um computador humano
-        util += getRandomInt(20, 30);     // Pixel perfect
-        disc += getRandomInt(25, 35);     // Gelo nas veias
+        sense += getRandomInt(25, 40);
+        util += getRandomInt(20, 30);
+        disc += getRandomInt(25, 35);
     }
 
     // Função auxiliar para manter entre 1 e 99
@@ -132,16 +138,16 @@ export class Player {
   private calculatePotential(): number {
     const volatility = getRandomInt(0, 10); // Fator "Sorte"
 
-    // 16-19: O céu é o limite (Crescem muito)
+    // 16-19: O céu é o limite
     if (this.age < 19) return Math.min(99, this.overall + getRandomInt(15, 25) + volatility);
     
-    // 19-23: Ainda evoluem, mas menos (Polimento)
+    // 19-23: Ainda evoluem, mas menos
     if (this.age <= 23) return Math.min(99, this.overall + getRandomInt(5, 15) + volatility);
     
-    // 24-27: Auge (Pouca evolução, foco em manter)
+    // 24-27: Auge
     if (this.age <= 27) return Math.min(99, this.overall + getRandomInt(0, 5));
 
-    // 28+: O Potencial é o que sobrou (Eles não evoluem mais, só tentam não cair)
+    // 28+: Estagnado
     return this.overall;
   }
 }

@@ -22,6 +22,40 @@ export class Team implements TeamAttributes {
 
   roster: Player[];
   activeLineup: Player[];
+  static fromJSON(data: Partial<Omit<TeamAttributes, 'roster'>> & { roster?: Record<string, unknown>[] }): Team {
+    
+    const tier = data.tier || 'C';
+    const instance = new Team(tier);
+
+    if (data.id) instance.id = data.id;
+    if (data.name) instance.name = data.name;
+    if (data.shortName) instance.shortName = data.shortName;
+    if (data.region) instance.region = data.region;
+    
+    if (data.colors) instance.colors = data.colors;
+    
+    instance.strategy = data.strategy || 'Balanced';
+
+    // CORREÇÃO 2: 'Balanced' não existe em TeamPlayStyle. 
+    // Mudei o fallback para 'Tactical' (ou você pode usar instance.determinePlayStyle() para gerar um novo).
+    instance.playStyle = data.playStyle || 'Tactical';
+    
+    if (data.budget !== undefined) instance.budget = data.budget;
+    if (data.prestige !== undefined) instance.prestige = data.prestige;
+    
+    if (data.mapPool) instance.mapPool = data.mapPool;
+
+    // CORREÇÃO 3: Verificação segura do roster
+    if (data.roster && Array.isArray(data.roster)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        instance.roster = data.roster.map((playerData: any) => 
+            Player.fromJSON(playerData)
+        );
+        instance.activeLineup = instance.roster.slice(0, 5);
+    }
+
+    return instance;
+  }
 
   constructor(tier: TeamTier, existingNames: string[] = []) {
     this.id = crypto.randomUUID();
