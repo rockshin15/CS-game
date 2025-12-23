@@ -1,12 +1,17 @@
-// src/ui/context/GameContextVals.ts
 import { createContext } from 'react';
 import type { CalendarEvent, GameDate } from '../../core/types/CalendarTypes';
 import type { JsonTeam } from '../screens/TeamSelectionScreen';
 
+// --- NOVOS IMPORTS NECESSÁRIOS ---
+// O erro acontece porque esta linha abaixo estava faltando:
+import type { MatchResult } from '../../core/types/MatchTypes'; 
+import type { MatchPairing } from '../../features/tournaments/TournamentStructure';
+import type { ActiveTournament } from '../../features/tournaments/TournamentTypes'; 
+
 // --- TIPOS ---
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Match = any;
+// Agora Match é igual a MatchPairing (para parar de usar 'any')
+export type Match = MatchPairing;
 
 export type GameState = {
   date: GameDate;
@@ -20,6 +25,9 @@ export type GameState = {
 
   currentMatches: Match[];
   userTeam: JsonTeam | null; 
+  
+  // Novo estado para controlar o torneio ativo
+  activeTournament: ActiveTournament | null;
 };
 
 // --- CRIAÇÃO DO CONTEXTO ---
@@ -29,4 +37,7 @@ export const GameContext = createContext<{
   advanceWeek: () => void;
   handleEventDecision: (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => void;
   setPlayerTeam: (team: JsonTeam) => void;
+  
+  // Aqui usamos o MatchResult que importamos lá em cima
+  processTournamentRound: (results: MatchResult[]) => void; 
 } | null>(null);

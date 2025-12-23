@@ -1,8 +1,6 @@
 // src/ui/screens/HubScreen.tsx
 import React, { useContext } from 'react';
 import { GameContext } from '../context/GameContextVals';
-// Removi o import do Button que não estava sendo usado
-// Importamos o tipo das estatísticas para evitar o "any"
 import type { JsonPlayerStats } from './TeamSelectionScreen';
 
 interface HubScreenProps {
@@ -17,10 +15,21 @@ export const HubScreen: React.FC<HubScreenProps> = ({ onNavigate }) => {
         return <div style={{ color: 'white', padding: 20 }}>Carregando dados do time...</div>;
     }
 
-    const { userTeam, date } = context.state;
+    // Extraímos activeTournament do estado, além de userTeam e date
+    const { userTeam, date, activeTournament } = context.state;
 
-    // CORREÇÃO: Tipagem explícita aqui substituindo o 'any'
+    // Função para calcular o Overall (Média dos status)
     const getOverall = (stats: JsonPlayerStats) => Math.floor((stats.aim + stats.reflexes + stats.spray + stats.sense + stats.util + stats.disc) / 6);
+
+    // Lógica para lidar com o clique no botão de Torneio
+    const handleTournamentClick = () => {
+        if (activeTournament) {
+            onNavigate('TOURNAMENT');
+        } else {
+            // Feedback simples se o jogador clicar sem ter torneio
+            alert("Não há nenhum torneio acontecendo nesta semana. Avance as semanas no Calendário.");
+        }
+    };
 
     return (
         <div style={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#0f172a', color: '#e2e8f0', overflow: 'hidden' }}>
@@ -43,10 +52,18 @@ export const HubScreen: React.FC<HubScreenProps> = ({ onNavigate }) => {
                 </div>
 
                 {/* Botões de Navegação */}
-                <MenuButton label="📅 Calendário" onClick={() => onNavigate('CALENDAR')} active />
+                <MenuButton label="📅 Calendário" onClick={() => onNavigate('CALENDAR')} />
+                
+                {/* Botão de Campeonatos Dinâmico */}
+                <MenuButton 
+                    label={activeTournament ? "🏆 Campeonatos (AO VIVO)" : "🏆 Campeonatos"} 
+                    onClick={handleTournamentClick} 
+                    active={!!activeTournament} // Fica destacado se houver torneio
+                    disabled={false} 
+                />
+
                 <MenuButton label="💰 Finanças" onClick={() => {}} disabled />
                 <MenuButton label="🕵️ Olheiro" onClick={() => {}} disabled />
-                <MenuButton label="🏆 Campeonatos" onClick={() => {}} disabled />
                 <MenuButton label="🏋️ Treino" onClick={() => {}} disabled />
             </div>
 
@@ -145,7 +162,7 @@ export const HubScreen: React.FC<HubScreenProps> = ({ onNavigate }) => {
                                             <td style={{ ...tdStyle, color: '#94a3b8' }}>{player.stats.sense}</td>
                                             <td style={{ ...tdStyle, color: '#94a3b8' }}>{player.stats.util}</td>
                                             <td style={{ ...tdStyle, fontWeight: 'bold', color: '#fff' }}>
-                                                {/* Placeholder para K/D, já que a simulação ainda não rodou */}
+                                                {/* Placeholder para K/D */}
                                                 0.00
                                             </td>
                                         </tr>
