@@ -32,7 +32,7 @@ function initializeTournament(event: CalendarEvent, userTeamId: string): { match
     });
     matches = TournamentStructure.generateSwissPairings(participants, swissStandings);
   } else if (format === 'GSL_GROUPS') {
-    matches = TournamentStructure.generateGSLOpening(participants.slice(0, 4));
+    matches = TournamentStructure.generateGSLOpening(participants.slice(0, 4)); // Exemplo: Pega os 4 primeiros para um grupo
   } else if (format === 'SINGLE_ELIMINATION') {
     matches = TournamentStructure.generatePlayoffs(participants);
   }
@@ -42,7 +42,7 @@ function initializeTournament(event: CalendarEvent, userTeamId: string): { match
     name: event.name,
     format: format,
     currentRound: 1,
-    totalRounds: format === 'SWISS' ? 5 : 3,
+    totalRounds: format === 'SWISS' ? 5 : 3, // Simplificação. Idealmente calculado baseado no nº de times (log2)
     participants,
     swissStandings: format === 'SWISS' ? swissStandings : undefined,
     matchHistory: [],
@@ -77,22 +77,42 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const handleEventDecision = (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => {
     setState(prev => {
+      // 1. Atualiza o status no agendamento
       const newSchedule = prev.fullSchedule.map(ev => {
         if (ev.id === eventId) return { ...ev, status: decision };
         return ev;
       });
-      let prestigePenalty = 0;
+
+      // Busca o evento original para ver detalhes
       const targetEvent = prev.fullSchedule.find(e => e.id === eventId);
       
+      let prestigePenalty = 0;
       // Penalidade apenas se recusar evento Tier S
       if (decision === 'DECLINED' && targetEvent?.tier === 'S') {
         prestigePenalty = 50; 
       }
 
+      // --- INICIALIZAÇÃO IMEDIATA ---
+      let newMatches = prev.currentMatches;
+      let newTournamentData = prev.activeTournament;
+
+      // Se aceitou e a data do evento é HOJE (Mês e Semana atuais), inicia já!
+      if (decision === 'ACCEPTED' && targetEvent) {
+          const { month, week } = prev.date;
+          if (targetEvent.startMonth === month && targetEvent.startWeek === week) {
+               console.log("Evento começa na semana atual! Inicializando imediatamente...");
+               const initData = initializeTournament(targetEvent, prev.userTeam?.name || 'PlayerTeam');
+               newMatches = initData.matches;
+               newTournamentData = initData.tournamentData;
+          }
+      }
+
       return {
         ...prev,
         fullSchedule: newSchedule,
-        teamRankingPoints: Math.max(0, prev.teamRankingPoints - prestigePenalty)
+        teamRankingPoints: Math.max(0, prev.teamRankingPoints - prestigePenalty),
+        currentMatches: newMatches,
+        activeTournament: newTournamentData 
       };
     });
   };
@@ -107,7 +127,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
         let nextMatches: Match[] = [];
 
-        // Lógica SWISS
+        // --- LÓGICA SWISS ---
         if (tournament.format === 'SWISS' && tournament.swissStandings) {
             // 1. Atualizar Standings
             results.forEach(res => {
@@ -139,9 +159,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
                     tournament.swissStandings
                 );
             }
+        } 
+        // --- LÓGICA GSL / PLAYOFFS (Placeholder Seguro) ---
+        else {
+            // TODO: Implementar lógica real para GSL e Playoffs
+            console.warn("Lógica para GSL/Playoffs ainda não implementada completamente. Finalizando torneio para evitar travamento.");
+            tournament.currentRound += 1;
+            
+            // Lógica simples de 'Mata-Mata': Se restam 2 times, acabou. Se não, gera semi-finais etc.
+            // Por enquanto, forçamos o fim para não travar o jogo do usuário.
+            tournament.isFinished = true; 
+            nextMatches = [];
         }
-        
-        // TODO: Implementar lógica futura para GSL e Playoffs
 
         const updatedTournament = tournament.isFinished ? null : tournament;
 
@@ -155,30 +184,73 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const advanceWeek = () => {
     setState(prev => {
-      // Bloqueio: Se tem torneio ativo não finalizado, não avança a semana
+      // 1. Bloqueio: Se tem torneio ativo não finalizado, não avança
       if (prev.activeTournament && !prev.activeTournament.isFinished) {
           console.warn("Complete o torneio atual antes de avançar a semana!");
-          return prev;
+          return prev; // Retorna o estado sem alterações
+      }
+
+      // 2. Preparação para limpar o torneio anterior
+      let scheduleUpdate = [...prev.fullSchedule];
+      let moneyUpdate = prev.teamMoney;
+      let rankingUpdate = prev.teamRankingPoints;
+      
+      if (prev.activeTournament && prev.activeTournament.isFinished) { // O torneio já foi marcado como finished no processRound, mas ainda está no state como objeto null? Não, logicamente aqui ele já virou null no processRound.
+          // NOTA: No seu código original, o processTournamentRound define activeTournament como null se isFinished for true.
+          // ENTÃO, aqui no advanceWeek, prev.activeTournament já será NULL se o torneio acabou.
+          // Precisamos de uma flag ou buffer para saber que "acabou um torneio agora".
+          
+          // CORREÇÃO LÓGICA: O processRound não deve anular o activeTournament imediatamente se quisermos calcular recompensas aqui.
+          // Ou, calculamos recompensas LÁ no processRound.
+          // Vamos assumir que processRound mantém o objeto activeTournament com isFinished=true.
+      }
+      
+      // *AJUSTE NO FLUXO*: Para simplificar, vamos assumir que processTournamentRound NÃO seta activeTournament como null,
+      // ele apenas seta isFinished: true. O advanceWeek é quem limpa (null).
+      
+      if (prev.activeTournament && prev.activeTournament.isFinished) {
+          const eventId = prev.activeTournament.id;
+          const eventRef = prev.fullSchedule.find(e => e.id === eventId);
+          
+          if (eventRef) {
+              scheduleUpdate = scheduleUpdate.map(ev => 
+                  ev.id === eventId ? { ...ev, status: 'COMPLETED' } : ev
+              );
+
+              // Melhoria no cálculo de recompensa (Placeholder)
+              // Se tiver standings, verificar wins. Se for playoff, ver até onde chegou.
+              let performanceMultiplier = 0.1; // Padrão participação
+              if (prev.activeTournament.swissStandings && prev.userTeam) {
+                   const myStats = prev.activeTournament.swissStandings[prev.userTeam.name];
+                   if (myStats && myStats.wins >= 3) performanceMultiplier = 0.5; // Exemplo: 3 vitórias = 50% do prêmio
+                   if (myStats && myStats.wins === 5) performanceMultiplier = 1.0; // Campeão invicto
+              }
+
+              moneyUpdate += (eventRef.prizePool * performanceMultiplier); 
+              rankingUpdate += (eventRef.prestige); // Poderia escalar com performance também
+              
+              console.log(`Torneio ${eventRef.name} arquivado. Recompensas entregues.`);
+          }
       }
 
       const { week, month, year } = prev.date;
       
-      // Lógica de Fadiga (Baseada nos eventos ativos da semana ATUAL antes de avançar)
-      const currentActiveEvents = prev.fullSchedule.filter(ev => 
+      // 3. Lógica de Fadiga
+      const currentActiveEvents = scheduleUpdate.filter(ev => 
         ev.status === 'ACCEPTED' &&
         ev.startMonth === month && 
         week >= ev.startWeek && 
         week < (ev.startWeek + ev.durationWeeks)
       );
 
-      let fatigueChange = -5; // Recuperação base
+      let fatigueChange = -5;
       if (currentActiveEvents.length > 0) {
         currentActiveEvents.forEach(ev => { fatigueChange += (ev.fatigueCost / ev.durationWeeks); });
       } else {
-        fatigueChange = -15; // Recuperação extra se livre
+        fatigueChange = -15;
       }
 
-      // Cálculo da Nova Data
+      // 4. Cálculo da Nova Data
       let nextWeek = week + 1;
       let nextMonth = month;
       let nextYear = year;
@@ -194,11 +266,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Verificar se começa um torneio na NOVA semana
+      // 5. Verificar Início Automático de Torneio na PRÓXIMA semana
       let newMatches: Match[] = [];
       let newTournamentData: ActiveTournament | null = null;
 
-      const startingEvent = prev.fullSchedule.find(ev => 
+      const startingEvent = scheduleUpdate.find(ev => 
         ev.status === 'ACCEPTED' &&
         ev.startMonth === nextMonth &&
         ev.startWeek === nextWeek
@@ -214,21 +286,32 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         date: { week: nextWeek, month: nextMonth, year: nextYear },
         managerFatigue: Math.min(100, Math.max(0, prev.managerFatigue + fatigueChange)),
-        activeEvents: prev.fullSchedule.filter(ev => 
+        teamMoney: moneyUpdate,
+        teamRankingPoints: rankingUpdate,
+        fullSchedule: scheduleUpdate,
+        activeEvents: scheduleUpdate.filter(ev => 
             ev.status === 'ACCEPTED' && 
             ev.startMonth === nextMonth && 
             nextWeek >= ev.startWeek && 
             nextWeek < (ev.startWeek + ev.durationWeeks)
         ),
         currentMatches: newMatches,
-        activeTournament: newTournamentData
+        // Se começou um novo, usa ele. Se não, anula o antigo (limpeza final do isFinished)
+        activeTournament: newTournamentData ? newTournamentData : null 
       };
     });
   };
 
+  // --- RETORNO DO COMPONENTE (Faltava isso!) ---
   return (
-    <GameContext.Provider value={{ state, advanceWeek, handleEventDecision, setPlayerTeam, processTournamentRound }}>
-      {children}
+    <GameContext.Provider value={{
+        state,
+        setPlayerTeam,
+        handleEventDecision,
+        processTournamentRound,
+        advanceWeek
+    }}>
+        {children}
     </GameContext.Provider>
   );
 }

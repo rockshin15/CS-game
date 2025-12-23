@@ -7,6 +7,17 @@ interface HubScreenProps {
     onNavigate: (screen: string) => void;
 }
 
+// --- SOLUÇÃO ELEGANTE PARA A TIPAGEM ---
+// Definimos uma interface local que diz: "É um objeto com status e nome, 
+// e PODE ter isFinished". Isso evita o uso de 'any'.
+interface SafeCalendarEvent {
+    name: string;
+    startMonth: string;
+    startWeek: number;
+    status: string;
+    isFinished?: boolean; // Opcional, pois pode não existir em dados legados
+}
+
 export const HubScreen: React.FC<HubScreenProps> = ({ onNavigate }) => {
     const context = useContext(GameContext);
 
@@ -15,21 +26,48 @@ export const HubScreen: React.FC<HubScreenProps> = ({ onNavigate }) => {
         return <div style={{ color: 'white', padding: 20 }}>Carregando dados do time...</div>;
     }
 
-    // Extraímos activeTournament do estado, além de userTeam e date
-    const { userTeam, date, activeTournament } = context.state;
+    // Extraímos activeTournament e fullSchedule do estado
+    const { userTeam, date, activeTournament, fullSchedule } = context.state;
 
-    // Função para calcular o Overall (Média dos status)
-    const getOverall = (stats: JsonPlayerStats) => Math.floor((stats.aim + stats.reflexes + stats.spray + stats.sense + stats.util + stats.disc) / 6);
+    // --- LÓGICA SEGURA ---
+    // Usamos um Type Guard implícito.
+    // Convertemos 'ev' para unknown e depois para nossa interface segura SafeCalendarEvent.
+    const nextAcceptedEvent = fullSchedule.find(ev => {
+        const safeEv = ev as unknown as SafeCalendarEvent;
+        
+        // Verifica se está ACEITO E (NÃO tem a flag de finalizado OU a flag é falsa)
+        // Usar === true garante que undefined não quebre a lógica se você quiser ser estrito,
+        // mas aqui mantivemos !safeEv.isFinished para pegar os não finalizados.
+        return safeEv.status === 'ACCEPTED' && !safeEv.isFinished;
+    });
+
+    // Lógica do Texto do Botão e Estado de "Ao Vivo"
+    let tournamentButtonLabel = "🏆 Campeonatos";
+    let isLive = false;
+
+    if (activeTournament) {
+        tournamentButtonLabel = "🏆 Campeonatos (AO VIVO)";
+        isLive = true;
+    } else if (nextAcceptedEvent) {
+        // TypeScript agora sabe que nextAcceptedEvent tem 'name' graças à busca acima
+        const safeNext = nextAcceptedEvent as unknown as SafeCalendarEvent;
+        tournamentButtonLabel = `📅 Próx: ${safeNext.name}`;
+    }
 
     // Lógica para lidar com o clique no botão de Torneio
     const handleTournamentClick = () => {
         if (activeTournament) {
             onNavigate('TOURNAMENT');
+        } else if (nextAcceptedEvent) {
+            const safeNext = nextAcceptedEvent as unknown as SafeCalendarEvent;
+            alert(`O torneio "${safeNext.name}" começa em ${safeNext.startMonth}, Semana ${safeNext.startWeek}. Avance o calendário!`);
         } else {
-            // Feedback simples se o jogador clicar sem ter torneio
-            alert("Não há nenhum torneio acontecendo nesta semana. Avance as semanas no Calendário.");
+            alert("Não há torneios ativos ou agendados. Vá ao Calendário para se inscrever.");
         }
     };
+
+    // Função para calcular o Overall (Média dos status)
+    const getOverall = (stats: JsonPlayerStats) => Math.floor((stats.aim + stats.reflexes + stats.spray + stats.sense + stats.util + stats.disc) / 6);
 
     return (
         <div style={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#0f172a', color: '#e2e8f0', overflow: 'hidden' }}>
@@ -54,11 +92,11 @@ export const HubScreen: React.FC<HubScreenProps> = ({ onNavigate }) => {
                 {/* Botões de Navegação */}
                 <MenuButton label="📅 Calendário" onClick={() => onNavigate('CALENDAR')} />
                 
-                {/* Botão de Campeonatos Dinâmico */}
+                {/* Botão de Campeonatos */}
                 <MenuButton 
-                    label={activeTournament ? "🏆 Campeonatos (AO VIVO)" : "🏆 Campeonatos"} 
+                    label={tournamentButtonLabel} 
                     onClick={handleTournamentClick} 
-                    active={!!activeTournament} // Fica destacado se houver torneio
+                    active={isLive} 
                     disabled={false} 
                 />
 
