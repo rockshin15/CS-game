@@ -37,7 +37,8 @@ export const GameContext = createContext<{
   advanceWeek: () => void;
   handleEventDecision: (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => void;
   setPlayerTeam: (team: JsonTeam) => void;
+  processTournamentRound: (results: MatchResult[]) => void;
   
-  // Aqui usamos o MatchResult que importamos lá em cima
-  processTournamentRound: (results: MatchResult[]) => void; 
+  // --- ADICIONE ESTA LINHA ---
+  simulateWeek: () => void; 
 } | null>(null);

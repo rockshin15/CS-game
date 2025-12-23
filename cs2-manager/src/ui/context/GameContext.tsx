@@ -11,7 +11,9 @@ import type { JsonTeam } from '../screens/TeamSelectionScreen';
 
 // Importamos tipos do Contexto e do Torneio
 import { GameContext, type GameState, type Match } from './GameContextVals';
-import type { ActiveTournament, SwissStanding } from '../../features/tournaments/TournamentTypes';
+import type{ ActiveTournament, SwissStanding } from '../../features/tournaments/TournamentTypes';
+import{ MatchEngine } from '../../core/classes/MatchEngine';
+import { Team } from '../../core/classes/Team';
 
 // --- LÓGICA INTERNA (Helpers) ---
 
@@ -106,7 +108,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
                newTournamentData = initData.tournamentData;
           }
       }
-
+  
       return {
         ...prev,
         fullSchedule: newSchedule,
@@ -195,17 +197,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       let moneyUpdate = prev.teamMoney;
       let rankingUpdate = prev.teamRankingPoints;
       
-      if (prev.activeTournament && prev.activeTournament.isFinished) { // O torneio já foi marcado como finished no processRound, mas ainda está no state como objeto null? Não, logicamente aqui ele já virou null no processRound.
-          // NOTA: No seu código original, o processTournamentRound define activeTournament como null se isFinished for true.
-          // ENTÃO, aqui no advanceWeek, prev.activeTournament já será NULL se o torneio acabou.
-          // Precisamos de uma flag ou buffer para saber que "acabou um torneio agora".
-          
-          // CORREÇÃO LÓGICA: O processRound não deve anular o activeTournament imediatamente se quisermos calcular recompensas aqui.
-          // Ou, calculamos recompensas LÁ no processRound.
-          // Vamos assumir que processRound mantém o objeto activeTournament com isFinished=true.
-      }
-      
-      // *AJUSTE NO FLUXO*: Para simplificar, vamos assumir que processTournamentRound NÃO seta activeTournament como null,
+      // *AJUSTE NO FLUXO*: Para simplificar, assumimos que processTournamentRound NÃO seta activeTournament como null,
       // ele apenas seta isFinished: true. O advanceWeek é quem limpa (null).
       
       if (prev.activeTournament && prev.activeTournament.isFinished) {
@@ -218,16 +210,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
               );
 
               // Melhoria no cálculo de recompensa (Placeholder)
-              // Se tiver standings, verificar wins. Se for playoff, ver até onde chegou.
               let performanceMultiplier = 0.1; // Padrão participação
               if (prev.activeTournament.swissStandings && prev.userTeam) {
                    const myStats = prev.activeTournament.swissStandings[prev.userTeam.name];
-                   if (myStats && myStats.wins >= 3) performanceMultiplier = 0.5; // Exemplo: 3 vitórias = 50% do prêmio
-                   if (myStats && myStats.wins === 5) performanceMultiplier = 1.0; // Campeão invicto
+                   if (myStats && myStats.wins >= 3) performanceMultiplier = 0.5; 
+                   if (myStats && myStats.wins === 5) performanceMultiplier = 1.0; 
               }
 
               moneyUpdate += (eventRef.prizePool * performanceMultiplier); 
-              rankingUpdate += (eventRef.prestige); // Poderia escalar com performance também
+              rankingUpdate += (eventRef.prestige); 
               
               console.log(`Torneio ${eventRef.name} arquivado. Recompensas entregues.`);
           }
@@ -302,14 +293,46 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // --- RETORNO DO COMPONENTE (Faltava isso!) ---
+  // --- NOVA FUNÇÃO: SIMULAR SEMANA / PARTIDAS ---
+  const simulateWeek = () => {
+    // 1. Verifica se existem partidas para jogar
+    const matchesToPlay = state.currentMatches;
+    if (!matchesToPlay || matchesToPlay.length === 0) {
+        console.warn("Nenhuma partida pendente para simular.");
+        return;
+    }
+
+    console.log(`Simulando ${matchesToPlay.length} partidas...`);
+
+    // 2. Gera os resultados usando a MatchEngine
+    const results: MatchResult[] = matchesToPlay.map(match => {
+        // Escolhe um mapa aleatório para dar variedade
+        const mapPool = ['de_mirage', 'de_dust2', 'de_inferno', 'de_nuke', 'de_ancient'];
+        const randomMap = mapPool[Math.floor(Math.random() * mapPool.length)];
+
+        // Executa a simulação
+        // O cast 'as unknown as Team' é usado porque o MatchEngine espera instâncias da classe Team,
+        // mas nossos dados vêm como JSON/TeamAttributes. 
+        return MatchEngine.simulateMatch(
+            match.teamA as unknown as Team, 
+            match.teamB as unknown as Team, 
+            randomMap
+        );
+    });
+
+    // 3. Processa os resultados (Atualiza tabela, avança rodada, etc)
+    processTournamentRound(results);
+  };
+
+  // --- RETORNO DO COMPONENTE ---
   return (
     <GameContext.Provider value={{
         state,
         setPlayerTeam,
         handleEventDecision,
         processTournamentRound,
-        advanceWeek
+        advanceWeek,
+        simulateWeek // <--- Adicionado ao value
     }}>
         {children}
     </GameContext.Provider>

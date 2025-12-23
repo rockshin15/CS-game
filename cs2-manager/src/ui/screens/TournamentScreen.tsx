@@ -1,9 +1,6 @@
 // src/ui/screens/TournamentScreen.tsx
 import React, { useContext } from 'react';
 import { GameContext } from '../context/GameContextVals';
-import type { MatchResult } from '../../core/types/MatchTypes'; // Adicionado 'type'
-
-// 'TeamAttributes' foi removido pois não estava sendo usado diretamente
 
 const styles = {
   container: { padding: '20px', color: '#fff' },
@@ -29,27 +26,12 @@ export const TournamentScreen: React.FC = () => {
   const { activeTournament, currentMatches } = game.state;
   const { swissStandings } = activeTournament;
 
-  // Função Temporária para Simular Resultados Rapidamente
+  // --- ALTERAÇÃO AQUI ---
+  // Agora usamos a função real do Contexto que roda a MatchEngine
   const handleSimulateRound = () => {
-    const results: MatchResult[] = currentMatches.map((match) => {
-      // Lógica simples de 50/50 para teste
-      const winnerIsA = Math.random() > 0.5;
-      const winner = winnerIsA ? match.teamA : match.teamB;
-      const loser = winnerIsA ? match.teamB : match.teamA;
-
-      return {
-        winnerId: winner.id,
-        loserId: loser.id,
-        scoreA: winnerIsA ? 13 : 8,
-        scoreB: winnerIsA ? 8 : 13,
-        mapName: 'de_mirage',
-        rounds: [],
-        killFeed: [] // Adicionado array vazio para satisfazer o tipo MatchResult se necessário
-      } as MatchResult; // Garantindo a tipagem
-    });
-
-    game.processTournamentRound(results);
+    game.simulateWeek();
   };
+  // ---------------------
 
   // Prepara a lista de classificação para exibição
   const sortedStandings = swissStandings
@@ -86,8 +68,7 @@ export const TournamentScreen: React.FC = () => {
               </thead>
               <tbody>
                 {sortedStandings.map((row, index) => (
-  // Usamos o ID do time ou, se falhar, o índice da lista com um prefixo
-  <tr key={row.team?.id || `standing-${index}`} style={{ borderBottom: '1px solid #333' }}>
+                  <tr key={row.team?.id || `standing-${index}`} style={{ borderBottom: '1px solid #333' }}>
                     <td style={{ padding: '8px' }}>{row.team?.name || 'Unknown'}</td>
                     <td style={{ color: '#4caf50' }}>{row.wins}</td>
                     <td style={{ color: '#f44336' }}>{row.losses}</td>
@@ -113,6 +94,7 @@ export const TournamentScreen: React.FC = () => {
             ))
           )}
           
+          {/* Só mostra o botão se houver jogos para simular */}
           {currentMatches.length > 0 && (
             <button style={styles.button} onClick={handleSimulateRound}>
               SIMULAR RODADA
