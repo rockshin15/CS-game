@@ -16,30 +16,22 @@ import { Team } from '../../core/classes/Team';
 
 // --- HELPER: Calcular Valor Numérico do Tempo (Para saber o que é futuro) ---
 const getWeekValue = (month: string, week: number, year: number) => {
-  // Usamos findIndex para evitar erro de tipagem estrita (string vs "Jan"|"Feb"...)
   const monthIndex = MONTHS.findIndex(m => m === month);
   return (year * 48) + (monthIndex * 4) + week;
 };
 
 // --- HELPER: Filtrar Convites Pendentes ---
-// Esta função garante que SEMPRE pegaremos todos os eventos pendentes futuros
 function getPendingInvites(schedule: CalendarEvent[], currentMonth: string, currentWeek: number, currentYear: number) {
   const nowValue = getWeekValue(currentMonth, currentWeek, currentYear);
 
   return schedule.filter(ev => {
-    // 1. Tem que estar pendente
     if (ev.status !== 'PENDING') return false;
-
-    // 2. O evento tem que ser no futuro ou na semana atual
-    const eventStartValue = getWeekValue(ev.startMonth, ev.startWeek, currentYear); // assumindo ano atual para o evento por enquanto
-    
-    // Mostra convites de eventos que começam daqui a até 8 semanas (2 meses)
-    // E esconde eventos que já passaram (eventStartValue < nowValue)
+    const eventStartValue = getWeekValue(ev.startMonth, ev.startWeek, currentYear);
+    // Mostra convites de eventos que começam daqui a até 8 semanas
     return eventStartValue >= nowValue && eventStartValue <= (nowValue + 8);
   });
 }
 
-// ... (Mantenha a função initializeTournament igual) ...
 function initializeTournament(event: CalendarEvent, userTeamId: string): { matches: Match[], tournamentData: ActiveTournament } {
     const allTeamsTyped = realTeams as unknown as TeamAttributes[];
     const participants = TournamentInviter.getParticipants(allTeamsTyped, event, userTeamId);
@@ -74,31 +66,28 @@ function initializeTournament(event: CalendarEvent, userTeamId: string): { match
     };
   
     return { matches, tournamentData };
-  }
+}
 
 
 // --- PROVIDER ---
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(() => {
-    // 1. Gera o calendário
     const schedule = CalendarGenerator.generateYearlySchedule(2025);
-    
-    // 2. Calcula convites iniciais (CORREÇÃO AQUI)
-    // Já busca convites válidos logo no início do jogo
     const initialInvites = getPendingInvites(schedule, 'Jan', 1, 2025);
 
     return {
       date: { week: 1, month: 'Jan', year: 2025 },
       activeEvents: [],
-      upcomingEvents: initialInvites, // <--- Populado corretamente
+      upcomingEvents: initialInvites,
       fullSchedule: schedule,
       managerFatigue: 0,
       teamMoney: 50000,
       teamRankingPoints: 1000,
       currentMatches: [],
       userTeam: null,
-      activeTournament: null
+      activeTournament: null,
+      lastMatchResult: null 
     };
   });
 
@@ -108,7 +97,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const handleEventDecision = (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => {
     setState(prev => {
-      // 1. Atualiza o status no agendamento
       const newSchedule = prev.fullSchedule.map(ev => {
         if (ev.id === eventId) return { ...ev, status: decision };
         return ev;
@@ -132,14 +120,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // CORREÇÃO: Atualizar a lista de upcomingEvents removendo o que acabamos de decidir
-      // Não precisamos recalcular tudo, apenas filtrar o ID decidido
       const updatedUpcoming = prev.upcomingEvents.filter(ev => ev.id !== eventId);
 
       return {
         ...prev,
         fullSchedule: newSchedule,
-        upcomingEvents: updatedUpcoming, // <--- Lista atualizada sem o evento decidido
+        upcomingEvents: updatedUpcoming,
         teamRankingPoints: Math.max(0, prev.teamRankingPoints - prestigePenalty),
         currentMatches: newMatches,
         activeTournament: newTournamentData
@@ -147,7 +133,28 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // ... (Mantenha processTournamentRound igual) ...
+  // --- LÓGICA DE PROGRESSÃO ---
+  const checkTournamentProgression = (tournament: ActiveTournament) => {
+    if (tournament.format === 'SWISS' && tournament.currentRound > tournament.totalRounds) {
+       const top8 = tournament.participants
+          .filter(t => tournament.swissStandings && tournament.swissStandings[t.id].wins >= 3)
+          .slice(0, 8); 
+       
+       if (top8.length >= 2) {
+           tournament.format = 'SINGLE_ELIMINATION'; 
+           tournament.currentRound = 1;
+           tournament.totalRounds = 3; 
+           tournament.swissStandings = undefined; 
+           
+           console.log("Avançando para Playoffs com:", top8.map(t => t.name));
+           return TournamentStructure.generatePlayoffs(top8);
+       } else {
+           return null; 
+       }
+    }
+    return null; 
+  };
+
   const processTournamentRound = (results: MatchResult[]) => {
     setState(prev => {
       if (!prev.activeTournament) return prev;
@@ -158,6 +165,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
       let nextMatches: Match[] = [];
 
+      // 1. Atualiza Pontuações (se Suíço)
       if (tournament.format === 'SWISS' && tournament.swissStandings) {
         results.forEach(res => {
           const winnerId = res.winnerId;
@@ -172,27 +180,39 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             tournament.swissStandings![loserId].played.push(winnerId);
           }
         });
-
-        tournament.currentRound += 1;
-
-        if (tournament.currentRound > tournament.totalRounds) {
-          tournament.isFinished = true;
-          nextMatches = [];
-          console.log("Torneio Suíço Finalizado!");
-        } else {
-          nextMatches = TournamentStructure.generateSwissPairings(
-            tournament.participants,
-            tournament.swissStandings
-          );
-        }
-      }
-      else {
-        tournament.currentRound += 1;
-        tournament.isFinished = true;
-        nextMatches = [];
       }
 
-      const updatedTournament = tournament.isFinished ? null : tournament;
+      // 2. Avança Rodada
+      tournament.currentRound += 1;
+
+      // 3. Verifica se o estágio atual acabou
+      if (tournament.currentRound > tournament.totalRounds) {
+         
+         const progressionMatches = checkTournamentProgression(tournament);
+
+         if (progressionMatches && progressionMatches.length > 0) {
+             nextMatches = progressionMatches;
+         } else {
+             // Fim do Torneio
+             tournament.isFinished = true;
+             nextMatches = [];
+             console.log("Torneio Finalizado!");
+         }
+
+      } else {
+         if (tournament.format === 'SWISS' && tournament.swissStandings) {
+            nextMatches = TournamentStructure.generateSwissPairings(
+              tournament.participants,
+              tournament.swissStandings
+            );
+         } else if (tournament.format === 'SINGLE_ELIMINATION') {
+             // Simplificação: encerra por enquanto se não tiver lógica de chaveamento
+             tournament.isFinished = true; 
+             nextMatches = [];
+         }
+      }
+
+      const updatedTournament = tournament.isFinished ? { ...tournament, isFinished: true } : tournament;
 
       return {
         ...prev,
@@ -213,7 +233,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       let moneyUpdate = prev.teamMoney;
       let rankingUpdate = prev.teamRankingPoints;
 
-      // Lógica de finalizar torneio e dar recompensas (Mantida)
       if (prev.activeTournament && prev.activeTournament.isFinished) {
         const eventId = prev.activeTournament.id;
         const eventRef = prev.fullSchedule.find(e => e.id === eventId);
@@ -222,10 +241,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           scheduleUpdate = scheduleUpdate.map(ev =>
             ev.id === eventId ? { ...ev, status: 'COMPLETED' } : ev
           );
-          // ... lógica de dinheiro/ranking igual ...
           let performanceMultiplier = 0.1;
           if (prev.activeTournament.swissStandings && prev.userTeam) {
-            const myStats = prev.activeTournament.swissStandings[prev.userTeam.name];
+            const myStats = prev.activeTournament.swissStandings[prev.userTeam.name]; 
             if (myStats && myStats.wins >= 3) performanceMultiplier = 0.5;
             if (myStats && myStats.wins === 5) performanceMultiplier = 1.0;
           }
@@ -236,7 +254,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
       const { week, month, year } = prev.date;
 
-      // Lógica de Fadiga (Mantida)
       const currentActiveEvents = scheduleUpdate.filter(ev =>
         ev.status === 'ACCEPTED' &&
         ev.startMonth === month &&
@@ -251,7 +268,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         fatigueChange = -15;
       }
 
-      // Cálculo da Nova Data
       let nextWeek = week + 1;
       let nextMonth = month;
       let nextYear = year;
@@ -267,13 +283,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // --- CORREÇÃO PRINCIPAL: DETECTAR NOVOS CONVITES ---
-      // Usamos a helper function para recalcular a lista baseada na NOVA data
-      // Isso garante que eventos não desapareçam se você não responder na hora
       const nextInvites = getPendingInvites(scheduleUpdate, nextMonth, nextWeek, nextYear);
-      // ---------------------------------------------------
 
-      // Verificar Início Automático (Mantido)
       let newMatches: Match[] = [];
       let newTournamentData: ActiveTournament | null = null;
 
@@ -296,9 +307,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         teamMoney: moneyUpdate,
         teamRankingPoints: rankingUpdate,
         fullSchedule: scheduleUpdate,
-        
-        upcomingEvents: nextInvites, // <--- Estado atualizado corretamente
-
+        upcomingEvents: nextInvites,
         activeEvents: scheduleUpdate.filter(ev =>
           ev.status === 'ACCEPTED' &&
           ev.startMonth === nextMonth &&
@@ -311,21 +320,45 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // ... (Mantenha simulateWeek e return iguais) ...
+  const clearLastMatchResult = () => {
+    setState(prev => ({ ...prev, lastMatchResult: null }));
+  };
+
+  // --- MOVIDO PARA CIMA (ANTES DO RETURN) ---
   const simulateWeek = () => {
-    const matchesToPlay = state.currentMatches;
-    if (!matchesToPlay || matchesToPlay.length === 0) {
+    const { currentMatches, activeTournament, userTeam } = state;
+
+    if (!currentMatches || currentMatches.length === 0) {
       console.warn("Nenhuma partida pendente para simular.");
       return;
     }
-    console.log(`Simulando ${matchesToPlay.length} partidas...`);
-    const results: MatchResult[] = matchesToPlay.map(match => {
-      const mapPool = ['de_mirage', 'de_dust2', 'de_inferno', 'de_nuke', 'de_ancient'];
-      const randomMap = mapPool[Math.floor(Math.random() * mapPool.length)];
+
+    console.log(`Simulando Rodada ${activeTournament?.currentRound}...`);
+
+    const results: MatchResult[] = currentMatches.map(match => {
       const teamAInstance = Team.fromJSON(match.teamA);
       const teamBInstance = Team.fromJSON(match.teamB);
-      return MatchEngine.simulateMatch(teamAInstance, teamBInstance, randomMap);
+      
+      const mapPool = ['de_mirage', 'de_dust2', 'de_inferno', 'de_nuke', 'de_ancient'];
+      const randomMap = mapPool[Math.floor(Math.random() * mapPool.length)];
+
+      const result = MatchEngine.simulateMatch(teamAInstance, teamBInstance, randomMap);
+
+      const isUserMatch = (match.teamA.id === userTeam?.id || match.teamB.id === userTeam?.id);
+      
+      if (!isUserMatch) {
+          result.rounds = []; 
+      }
+
+      return result;
     });
+
+    // Salva o resultado do usuário para exibir na UI depois, se necessário
+    const userResult = results.find(r => r.winnerId === userTeam?.id || r.loserId === userTeam?.id);
+    if (userResult) {
+        setState(prev => ({ ...prev, lastMatchResult: userResult }));
+    }
+
     processTournamentRound(results);
   };
 
@@ -336,7 +369,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       handleEventDecision,
       processTournamentRound,
       advanceWeek,
-      simulateWeek
+      simulateWeek,
+      clearLastMatchResult 
     }}>
       {children}
     </GameContext.Provider>

@@ -25,6 +25,7 @@ export interface JsonPlayer {
 }
 
 export interface JsonTeam {
+    id: string;
     name: string;
     shortName: string;
     region: string;
@@ -43,12 +44,19 @@ interface TeamSelectionScreenProps {
 }
 
 export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({ onTeamSelected, onBack }) => {
-    // Forçamos o tipo aqui para garantir que o TS entenda que o JSON segue a interface
-    const teamsData = realTeams as unknown as JsonTeam[];
+    
+    // --- CORREÇÃO DE DADOS (SEM 'ANY') ---
+    // Criamos um tipo local que diz: "O dado bruto é igual ao JsonTeam, mas o ID é opcional"
+    type RawTeamData = Omit<JsonTeam, 'id'> & { id?: string };
+
+    // Agora o TypeScript sabe exatamente o que esperar do JSON, sem usar 'any'
+    const teamsData = (realTeams as unknown as RawTeamData[]).map(team => ({
+        ...team,
+        // Se o ID não existir no JSON, usa o nome como fallback
+        id: team.id || team.name 
+    })) as JsonTeam[];
     
     const [selectedTeam, setSelectedTeam] = useState<JsonTeam>(teamsData[0]);
-
-    // Agora stats tem o tipo correto
     const calculateOverall = (stats: JsonPlayerStats) => {
         const { aim, reflexes, spray, sense, util, disc } = stats;
         return Math.floor((aim + reflexes + spray + sense + util + disc) / 6);

@@ -16,6 +16,17 @@ import type { ActiveTournament } from '../../features/tournaments/TournamentType
 // Isso evita conflitos de 'any' ou tipos incompatíveis
 export type Match = MatchPairing;
 
+export interface GameContextType {
+  state: GameState;
+  advanceWeek: () => void;
+  simulateWeek: () => void;
+  handleEventDecision: (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => void;
+  setPlayerTeam: (team: JsonTeam) => void;
+  processTournamentRound: (results: MatchResult[]) => void;
+  // ADICIONE ISSO:
+  clearLastMatchResult: () => void; 
+}
+
 // Interface Principal do Estado do Jogo
 export interface GameState {
   // Data atual do jogo
@@ -35,6 +46,8 @@ export interface GameState {
   currentMatches: Match[];              // Partidas agendadas para a semana atual
   userTeam: JsonTeam | null;            // Time escolhido pelo jogador
   activeTournament: ActiveTournament | null; // Dados detalhados do torneio rodando (se houver)
+  lastMatchResult: MatchResult | null;
+
 }
 
 // Interface das Funções do Contexto (API que os componentes usam)
