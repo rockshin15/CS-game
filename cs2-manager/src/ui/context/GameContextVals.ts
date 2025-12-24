@@ -1,44 +1,56 @@
+// src/ui/context/GameContextVals.ts
 import { createContext } from 'react';
+
+// Imports de Tipos Básicos
 import type { CalendarEvent, GameDate } from '../../core/types/CalendarTypes';
 import type { JsonTeam } from '../screens/TeamSelectionScreen';
 
-// --- NOVOS IMPORTS NECESSÁRIOS ---
-// O erro acontece porque esta linha abaixo estava faltando:
-import type { MatchResult } from '../../core/types/MatchTypes'; 
+// Imports de Tipos de Competição e Torneio
+import type { MatchResult } from '../../core/types/MatchTypes';
 import type { MatchPairing } from '../../features/tournaments/TournamentStructure';
-import type { ActiveTournament } from '../../features/tournaments/TournamentTypes'; 
+import type { ActiveTournament } from '../../features/tournaments/TournamentTypes';
 
-// --- TIPOS ---
+// --- DEFINIÇÃO DE TIPOS ---
 
-// Agora Match é igual a MatchPairing (para parar de usar 'any')
+// Definimos que 'Match' é exatamente o que a estrutura de torneio gera (MatchPairing)
+// Isso evita conflitos de 'any' ou tipos incompatíveis
 export type Match = MatchPairing;
 
-export type GameState = {
+// Interface Principal do Estado do Jogo
+export interface GameState {
+  // Data atual do jogo
   date: GameDate;
-  activeEvents: CalendarEvent[];
-  upcomingEvents: CalendarEvent[];
-  fullSchedule: CalendarEvent[];
   
+  // Gestão de Eventos e Calendário
+  activeEvents: CalendarEvent[];   // Eventos aceitos acontecendo agora
+  upcomingEvents: CalendarEvent[]; // Convites pendentes (Correção vital para os convites aparecerem)
+  fullSchedule: CalendarEvent[];   // Todos os eventos do ano
+  
+  // Recursos do Jogador/Time
   managerFatigue: number;
   teamMoney: number;
   teamRankingPoints: number;
 
-  currentMatches: Match[];
-  userTeam: JsonTeam | null; 
-  
-  // Novo estado para controlar o torneio ativo
-  activeTournament: ActiveTournament | null;
-};
+  // Estado da Competição Ativa
+  currentMatches: Match[];              // Partidas agendadas para a semana atual
+  userTeam: JsonTeam | null;            // Time escolhido pelo jogador
+  activeTournament: ActiveTournament | null; // Dados detalhados do torneio rodando (se houver)
+}
 
-// --- CRIAÇÃO DO CONTEXTO ---
-
-export const GameContext = createContext<{
+// Interface das Funções do Contexto (API que os componentes usam)
+export interface GameContextType {
   state: GameState;
+  
+  // Funções de Controle de Tempo
   advanceWeek: () => void;
+  simulateWeek: () => void; // Essencial para o botão de avançar rodar as partidas
+  
+  // Funções de Decisão e Gestão
   handleEventDecision: (eventId: string, decision: 'ACCEPTED' | 'DECLINED') => void;
   setPlayerTeam: (team: JsonTeam) => void;
   processTournamentRound: (results: MatchResult[]) => void;
-  
-  // --- ADICIONE ESTA LINHA ---
-  simulateWeek: () => void; 
-} | null>(null);
+}
+
+// --- CRIAÇÃO DO CONTEXTO ---
+
+export const GameContext = createContext<GameContextType | null>(null);
